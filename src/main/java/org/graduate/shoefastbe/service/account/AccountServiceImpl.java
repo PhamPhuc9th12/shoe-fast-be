@@ -7,22 +7,23 @@ import org.graduate.shoefastbe.base.error_success_handle.SuccessHandle;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.enums.RoleEnums;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
-import org.graduate.shoefastbe.dto.account.AccountResponse;
-import org.graduate.shoefastbe.dto.account.LoginRequest;
-import org.graduate.shoefastbe.dto.account.TokenAndRole;
+import org.graduate.shoefastbe.dto.account.*;
 import org.graduate.shoefastbe.entity.AccountDetailEntity;
 import org.graduate.shoefastbe.entity.AccountEntity;
 import org.graduate.shoefastbe.mapper.AccountDetailMapper;
 import org.graduate.shoefastbe.mapper.AccountMapper;
 import org.graduate.shoefastbe.repository.AccountDetailRepository;
 import org.graduate.shoefastbe.repository.AccountRepository;
+import org.graduate.shoefastbe.util.MailUtil;
 import org.graduate.shoefastbe.validation.AccountValidationHelper;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.mail.MessagingException;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -38,6 +39,7 @@ public class AccountServiceImpl implements AccountService {
     public SuccessResponse singUp(AccountCreateRequest account) {
         accountValidationHelper.signUpValidate(account);
         AccountEntity accountEntity = accountMapper.getEntityFromRequest(account);
+        accountEntity.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt()));
         accountEntity.setIsActive(Boolean.TRUE);
         accountEntity.setRole(RoleEnums.CUSTOMER.name());
         accountEntity.setCreateDate(LocalDate.now());
@@ -68,7 +70,40 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse findByUsername(String accessToken) {
         String username = TokenHelper.getUsernameFromToken(accessToken);
         AccountEntity accountEntity = accountRepository.findByUsername(username);
-        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(accountEntity.getId());
+       return getAccountDetail(accountEntity, accountEntity.getId());
+    }
+
+    @Override
+    @Transactional
+    public SuccessResponse forgotPassword(ForgotPassRequest forgotPassRequest) throws MessagingException {
+        AccountEntity accountEntity = accountRepository.findByUsername(forgotPassRequest.getUsername());
+        if(Objects.isNull(accountEntity)) throw new RuntimeException(CodeAndMessage.ERR2);
+        String newPassword = String.valueOf(UUID.randomUUID());
+        accountEntity.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        accountRepository.saveAndFlush(accountEntity);
+        //gửi mail
+        AccountDetailEntity accountDetail = accountDetailRepository.findByAccountId(accountEntity.getId());
+        MailUtil.sendmailForgotPassword(accountDetail.getEmail(), newPassword);
+        return SuccessHandle.success(CodeAndMessage.ME100);
+    }
+
+    @Override
+    public AccountResponse getDetailById(Long id) {
+        AccountEntity accountEntity = accountRepository.findById(id).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR2)
+        );
+        return getAccountDetail(accountEntity, id);
+    }
+    @Override
+    @Transactional
+    public AccountDetailEntity updateProfile(AccountUpdateRequest accountUpdateRequest) {
+        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(accountUpdateRequest.getId());
+        accountDetailMapper.updateEntityByUpdateAccount(accountDetailEntity, accountUpdateRequest);
+        return accountDetailEntity;
+    }
+
+    private AccountResponse getAccountDetail(AccountEntity accountEntity, Long id){
+        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(id);
         return AccountResponse.builder()
                 .id(accountEntity.getId())
                 .address(accountDetailEntity.getAddress())
@@ -84,5 +119,4 @@ public class AccountServiceImpl implements AccountService {
                 .modifyDate(accountEntity.getModifyDate())
                 .build();
     }
-
 }

@@ -35,7 +35,7 @@ public class AccountCreateRequest {
     @NotNull(message = "Address không được null")
     @NotEmpty(message = "Address không được trống")
     private String address;
-//    @NotNull(message = "BirthDate không được null")
+    @NotNull(message = "BirthDate không được null")
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     private LocalDate birthdate;
 }

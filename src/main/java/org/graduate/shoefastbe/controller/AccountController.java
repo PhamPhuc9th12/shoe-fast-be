@@ -5,12 +5,12 @@ import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.Common;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
-import org.graduate.shoefastbe.dto.account.AccountResponse;
-import org.graduate.shoefastbe.dto.account.LoginRequest;
-import org.graduate.shoefastbe.dto.account.TokenAndRole;
+import org.graduate.shoefastbe.dto.account.*;
+import org.graduate.shoefastbe.entity.AccountDetailEntity;
 import org.graduate.shoefastbe.service.account.AccountService;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.validation.Valid;
 
 @RestController
@@ -35,4 +35,21 @@ public class AccountController {
     AccountResponse getAccountResponse(@RequestHeader(Common.AUTHORIZATION) String accessToken){
          return accountService.findByUsername(accessToken);
     }
+    @GetMapping("/detail/id")
+    @Operation(summary = "Lấy thông tin chi tiết theo id")
+    AccountResponse getAccountResponse(@RequestParam Long id){
+        return accountService.getDetailById(id);
+    }
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Quên mật khẩu")
+    SuccessResponse forgotPassword(@RequestBody ForgotPassRequest forgotPassRequest) throws MessagingException {
+        return accountService.forgotPassword(forgotPassRequest);
+    }
+    @PutMapping("/update-profile")
+    @Operation(summary = "Cập nhập mật khẩu")
+    AccountDetailEntity forgotPassword(@RequestBody AccountUpdateRequest accountUpdateRequest)  {
+        return accountService.updateProfile(accountUpdateRequest);
+    }
+
+
 }
