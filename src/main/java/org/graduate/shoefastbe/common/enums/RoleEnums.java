@@ -1,9 +1,8 @@
 package org.graduate.shoefastbe.common.enums;
 
 public enum RoleEnums {
-    MANAGER("MANAGER"),
-    RECRUITER("RECRUITER"),
-    INTERVIEWER("INTERVIEWER"),
+    EMPLOYEE("EMP"),
+    CUSTOMER("CUS"),
     ADMIN("ADMIN");
 
     RoleEnums(String manager) {

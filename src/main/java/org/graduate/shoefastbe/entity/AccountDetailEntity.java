@@ -2,9 +2,7 @@ package org.graduate.shoefastbe.entity;
 
 import lombok.*;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDate;
 
 @AllArgsConstructor
@@ -12,11 +10,15 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Builder
+@Entity
+@Table(name = "account_detail")
 public class AccountDetailEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate birthdate;
+    @Column(name = "fullname")
+    private String fullName;
     private String email;
     private String gender;
     private String phone;
