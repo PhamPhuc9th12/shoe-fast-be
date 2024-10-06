@@ -7,6 +7,7 @@ import org.graduate.shoefastbe.base.error_success_handle.SuccessHandle;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.enums.RoleEnums;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
+import org.graduate.shoefastbe.dto.account.AccountResponse;
 import org.graduate.shoefastbe.dto.account.LoginRequest;
 import org.graduate.shoefastbe.dto.account.TokenAndRole;
 import org.graduate.shoefastbe.entity.AccountDetailEntity;
@@ -61,6 +62,27 @@ public class AccountServiceImpl implements AccountService {
             return new TokenAndRole(accessToken, userEntity.getRole(), accountDetailEntity.getFullName());
         }
         throw new RuntimeException(CodeAndMessage.ERR1);
+    }
+
+    @Override
+    public AccountResponse findByUsername(String accessToken) {
+        String username = TokenHelper.getUsernameFromToken(accessToken);
+        AccountEntity accountEntity = accountRepository.findByUsername(username);
+        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(accountEntity.getId());
+        return AccountResponse.builder()
+                .id(accountEntity.getId())
+                .address(accountDetailEntity.getAddress())
+                .email(accountDetailEntity.getEmail())
+                .phone(accountDetailEntity.getPhone())
+                .gender(accountDetailEntity.getGender())
+                .username(accountEntity.getUsername())
+                .birthDate(accountDetailEntity.getBirthdate())
+                .fullName(accountDetailEntity.getFullName())
+                .roleName(accountEntity.getRole())
+                .isActive(accountEntity.getIsActive())
+                .createDate(accountEntity.getCreateDate())
+                .modifyDate(accountEntity.getModifyDate())
+                .build();
     }
 
 }

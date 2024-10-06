@@ -83,4 +83,12 @@ public class TokenHelper {
                 .getBody();
         return claims.get(ROLE, String.class);
     }
+    public static String getUsernameFromToken(String token){
+        token = token.substring(7);
+        Claims claims = Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get(USERNAME, String.class);
+    }
 }
