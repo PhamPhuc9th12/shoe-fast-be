@@ -6,6 +6,9 @@ public class CodeAndMessage {
     public static final String ME104 = "ME0104-Username is already exists";
     public static final String ME105 = "ME0104-Email is already exists";
     public static final String ME106 = "ME106-Account successfully created! ";
+
+    //error
+    public static final String ERR1 = "ERR1-Incorrect password";
     public static final String ERR4 = "ERR4-No authorization";
 
 }

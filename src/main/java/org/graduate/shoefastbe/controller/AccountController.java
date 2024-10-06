@@ -3,6 +3,8 @@ package org.graduate.shoefastbe.controller;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
+import org.graduate.shoefastbe.dto.account.LoginRequest;
+import org.graduate.shoefastbe.dto.account.TokenAndRole;
 import org.graduate.shoefastbe.service.account.AccountService;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,5 +20,9 @@ public class AccountController {
     @PostMapping("/create")
     SuccessResponse singUp(@RequestBody @Valid AccountCreateRequest accountCreateRequest){
         return accountService.singUp(accountCreateRequest);
+    }
+    @PostMapping("/login")
+    TokenAndRole logIn(@RequestBody @Valid LoginRequest loginRequest){
+        return accountService.login(loginRequest);
     }
 }
