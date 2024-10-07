@@ -34,4 +34,7 @@ public class OrderEntity {
     private Boolean isPending;
     private String encodeUrl;
     private Boolean seen;
+    private Long accountId;
+    private Long voucherId;
+    private Long orderStatusId;
 }
