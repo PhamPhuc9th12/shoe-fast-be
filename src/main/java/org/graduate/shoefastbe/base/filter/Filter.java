@@ -36,8 +36,11 @@ public class Filter<T> {
         private String logicOperator;
         private Map<Object, Object> paramMap;
         private Integer paramCount;
+        private String table = "e.";
         private StringBuilder conditions;
         private String orderBy;
+        private StringBuilder statement;
+        private final List<Object> parameters = new ArrayList();
         private Boolean mustOpenParentheses;
         private Boolean mustCloseParentheses;
 
@@ -161,6 +164,45 @@ public class Filter<T> {
             }
             mustCloseParentheses = true;
             return this;
+        }
+        public FilterBuilder isLessThan(String fieldName, Object value) {
+            if (value == null) {
+                return this;
+            } else {
+                this.parameters.add(value);
+                conditions.append(this.logicOperator).append(this.table).append(fieldName).append(" < ").append(this.parameters.get(0));
+                return this;
+            }
+        }
+
+        public FilterBuilder isGreaterThan(String fieldName, Object value) {
+            if (value == null) {
+                return this;
+            } else {
+                this.parameters.add(value);
+                conditions.append(this.logicOperator).append(this.table).append(fieldName).append(" > ").append(this.parameters.get(0));
+                return this;
+            }
+        }
+
+        public FilterBuilder isLessThanOrEqual(String fieldName, Object value) {
+            if (value == null) {
+                return this;
+            } else {
+                this.parameters.add(value);
+                conditions.append(this.logicOperator).append(this.table).append(fieldName).append(" <= ").append(this.parameters.get(1));
+                return this;
+            }
+        }
+
+        public FilterBuilder isGreaterThanOrEqual(String fieldName, Object value) {
+            if (value == null) {
+                return this;
+            } else {
+                this.parameters.add(value);
+                conditions.append(this.logicOperator).append(this.table).append(fieldName).append(" >= ").append(this.parameters.get(0));
+                return this;
+            }
         }
 
         @Override

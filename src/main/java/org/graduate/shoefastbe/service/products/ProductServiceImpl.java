@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.products;
 
 import lombok.AllArgsConstructor;
+import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
 import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
 import org.graduate.shoefastbe.entity.AttributeEntity;
 import org.graduate.shoefastbe.entity.BrandsEntity;
@@ -53,6 +54,54 @@ public class ProductServiceImpl implements ProductService {
         return productEntities.map(
                 product -> {
                     AttributeEntity attribute = attributeMap.get(product.getId());
+                    return ProductDtoResponse.builder()
+                            .id(product.getId())
+                            .name(product.getName())
+                            .price(attribute.getPrice())
+                            .brand(brandsEntityMap.get(product.getBrandId()).getName())
+                            .code(product.getCode())
+                            .view(product.getView())
+                            .description(product.getDescription())
+                            .image("image")
+                            .discount(salesEntityMap.get(product.getSaleId()).getDiscount())
+                            .isActive(product.getIsActive())
+                            .build();
+                }
+        );
+    }
+
+    @Override
+    public Page<ProductDtoResponse> getAllProductFilter(ProductDtoRequest productDtoRequest, Pageable pageable) {
+        Page<AttributeEntity> attributeEntities = customRepository.getAttributeFilter(productDtoRequest.getBrandIds(),
+                productDtoRequest.getCategoryIds(),productDtoRequest.getMin(),productDtoRequest.getMax(), pageable);
+        Map<Long, ProductEntity> longProductEntityMap = productRepository.findAllByIdIn(attributeEntities.stream()
+                .map(AttributeEntity::getProductId).collect(Collectors.toSet()))
+                .stream()
+                .collect(Collectors.toMap(
+                        ProductEntity::getId,Function.identity()
+                ));
+        Map<Long, AttributeEntity> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
+                AttributeEntity::getProductId, Function.identity()
+        ));
+        List<BrandsEntity> brandsEntities = brandsRepository.findAllByIdIn(longProductEntityMap.values()
+                .stream()
+                .map(ProductEntity::getBrandId )
+                .collect(Collectors.toSet()));
+        Map<Long, BrandsEntity> brandsEntityMap = brandsEntities.stream().collect(Collectors.toMap(
+                BrandsEntity::getId,Function.identity()
+        ));
+
+        List<SalesEntity> salesEntities = salesRepository.findAllByIdIn(longProductEntityMap.values()
+                .stream()
+                .map(ProductEntity::getSaleId)
+                .collect(Collectors.toSet()));
+        Map<Long, SalesEntity> salesEntityMap = salesEntities.stream().collect(Collectors.toMap(
+                SalesEntity::getId,Function.identity()
+        ));
+
+        return attributeEntities.map(
+                attribute -> {
+                    ProductEntity product = longProductEntityMap.get(attribute.getProductId());
                     return ProductDtoResponse.builder()
                             .id(product.getId())
                             .name(product.getName())

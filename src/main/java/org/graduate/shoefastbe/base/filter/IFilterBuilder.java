@@ -15,5 +15,9 @@ public interface IFilterBuilder<T> {
     Filter.FilterBuilder<T> orderBy(String fieldName, String orderType);
     Filter.FilterBuilder<T> isNull(String fieldName);
     Filter.FilterBuilder<T> isNotNull(String fieldName);
+    Filter.FilterBuilder<T> isLessThan(String fieldName, Object value);
+    Filter.FilterBuilder<T> isGreaterThan(String fieldName, Object value);
+    Filter.FilterBuilder<T> isLessThanOrEqual(String fieldName, Object value);
+    Filter.FilterBuilder<T> isGreaterThanOrEqual(String fieldName, Object value);
     Page<T> getPage(Pageable pageable);
 }
