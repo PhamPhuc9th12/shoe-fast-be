@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Setter
 @Builder
 @Entity
-@Table(name = "product")
+@Table(name = "products")
 public class ProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class ProductEntity {
     private String description;
     private String name;
     private Long view;
-    private Long branchId;
+    private Long brandId;
     private Long saleId;
     private Boolean isActive;
     private LocalDate createDate;
