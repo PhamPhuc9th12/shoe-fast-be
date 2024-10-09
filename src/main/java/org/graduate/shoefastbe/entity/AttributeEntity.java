@@ -22,6 +22,7 @@ public class AttributeEntity {
     private String name;
     private Double price;
     private Long productId;
+    private Long size;
     private Integer stock;
     private Integer cache;
     private LocalDate createDate;
