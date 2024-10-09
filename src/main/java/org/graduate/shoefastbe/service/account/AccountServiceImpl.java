@@ -99,6 +99,7 @@ public class AccountServiceImpl implements AccountService {
     public AccountDetailEntity updateProfile(AccountUpdateRequest accountUpdateRequest) {
         AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(accountUpdateRequest.getId());
         accountDetailMapper.updateEntityByUpdateAccount(accountDetailEntity, accountUpdateRequest);
+        accountDetailRepository.save(accountDetailEntity);
         return accountDetailEntity;
     }
 
