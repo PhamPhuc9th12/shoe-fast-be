@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface ProductCategoryRepository extends JpaRepository<ProductCategoryEntity, Long> {
     List<ProductCategoryEntity> findAllByCategoryIdIn(Collection<Long> ids);
+    List<ProductCategoryEntity> findAllByProductId(Long productId);
 }

@@ -12,10 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -24,11 +21,11 @@ public class CustomRepository {
     private final EntityManager entityManager;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductRepository productRepository;
-    public Page<ProductEntity> getAccountBy(String search, String role, Pageable pageable) {
+    public Page<ProductEntity> getProductRelate(Long productId, Long brandId, Pageable pageable) {
         return Filter.builder(ProductEntity.class, entityManager)
                 .filter()
-                .isEqual("role", role)
-                .isContain("username", search)
+                .isEqual("brandId", brandId)
+                .isNotIn("id", Collections.singleton(productId))
                 .getPage(pageable);
     }
     public List<AttributeEntity> getAttributeByProductId(Collection<Long> productIds) {

@@ -2,6 +2,7 @@ package org.graduate.shoefastbe.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.*;
+import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
 import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
 import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
 import org.graduate.shoefastbe.service.products.ProductService;
@@ -27,5 +28,17 @@ public class ProductController {
     Page<ProductDtoResponse> getAllProductFilter(@RequestBody ProductDtoRequest productDtoRequest,
                                                  @ParameterObject Pageable pageable){
         return productService.getAllProductFilter(productDtoRequest,pageable);
+    }
+    @GetMapping()
+    @Operation(summary = "Lấy chi tiết product")
+    ProductDetailResponse getDetailProduct(@RequestParam Long id){
+        return productService.getProductDetail(id);
+    }
+
+    @GetMapping("/relate")
+    @Operation(summary = "Lấy các sản phẩm liên quan")
+    Page<ProductDtoResponse> getRelateProduct(@RequestParam Long id, @RequestParam Long brandId,
+                                              @ParameterObject Pageable pageable){
+        return productService.getProductRelate(id, brandId, pageable);
     }
 }
