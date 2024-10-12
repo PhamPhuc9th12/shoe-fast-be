@@ -5,4 +5,5 @@ public class Common {
     public static final String AUTHORIZATION = "Authorization";
 
     public static final Long SIZE_AVG = 39L;
+    public static final String DEFAULT_IMAGE = "nike_a.jpg";
 }
