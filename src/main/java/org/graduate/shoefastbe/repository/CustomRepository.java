@@ -3,6 +3,7 @@ package org.graduate.shoefastbe.repository;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.base.filter.Filter;
+import org.graduate.shoefastbe.common.Common;
 import org.graduate.shoefastbe.entity.AttributeEntity;
 import org.graduate.shoefastbe.entity.ProductCategoryEntity;
 import org.graduate.shoefastbe.entity.ProductEntity;
@@ -26,6 +27,13 @@ public class CustomRepository {
                 .filter()
                 .isEqual("brandId", brandId)
                 .isNotIn("id", Collections.singleton(productId))
+                .getPage(pageable);
+    }
+
+    public Page<ProductEntity> getProductBySearch(String search, Pageable pageable) {
+        return Filter.builder(ProductEntity.class, entityManager)
+                .filter()
+                .isContain("name", search)
                 .getPage(pageable);
     }
     public List<AttributeEntity> getAttributeByProductId(Collection<Long> productIds) {

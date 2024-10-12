@@ -22,4 +22,12 @@ public class AttributeServiceImpl implements AttributeService {
         if(Objects.isNull(attribute)) throw new RuntimeException(CodeAndMessage.ERR3);
         return attributeMapper.getResponseFromEntity(attribute);
     }
+
+    @Override
+    public AttributeDtoResponse getAttributeById(Long id) {
+        AttributeEntity attribute = attributeRepository.findById(id).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        return attributeMapper.getResponseFromEntity(attribute);
+    }
 }

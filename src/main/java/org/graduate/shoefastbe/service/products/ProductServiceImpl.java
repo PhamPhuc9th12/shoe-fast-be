@@ -125,6 +125,13 @@ public class ProductServiceImpl implements ProductService {
         Page<ProductEntity> productEntities = customRepository.getProductRelate(productId,brandId,pageable);
         return getProductDtoResponses(productEntities);
     }
+
+    @Override
+    public Page<ProductDtoResponse> getProductBySearch(String search, Pageable pageable) {
+        Page<ProductEntity> productEntities = productRepository.getProductBySearch(search,pageable);
+        return getProductDtoResponses(productEntities);
+    }
+
     private Page<ProductDtoResponse> getProductDtoResponses(Page<ProductEntity> productEntities) {
         List<AttributeEntity> attributeEntities = customRepository.getAttributeByProductId(productEntities
                 .stream().map(ProductEntity::getId).collect(Collectors.toSet()));

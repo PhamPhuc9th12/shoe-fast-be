@@ -23,8 +23,8 @@ public class AttributeEntity {
     private Double price;
     private Long productId;
     private Long size;
-    private Integer stock;
-    private Integer cache;
+    private Long stock;
+    private Long cache;
     private LocalDate createDate;
     private LocalDate modifyDate;
 }

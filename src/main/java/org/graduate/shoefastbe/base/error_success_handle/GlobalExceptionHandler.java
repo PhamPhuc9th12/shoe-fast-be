@@ -11,6 +11,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
         String[] exMes = ex.getMessage().split("-");
         ErrorResponse errorResponse = new ErrorResponse(exMes[0], exMes[1]);
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

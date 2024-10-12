@@ -41,4 +41,11 @@ public class ProductController {
                                               @ParameterObject Pageable pageable){
         return productService.getProductRelate(id, brandId, pageable);
     }
+
+    @GetMapping("/search")
+    @Operation(summary = "Lấy các sản phẩm theo search")
+    Page<ProductDtoResponse> getProductBySearch(@RequestParam String search,
+                                              @ParameterObject Pageable pageable){
+        return productService.getProductBySearch(search, pageable);
+    }
 }

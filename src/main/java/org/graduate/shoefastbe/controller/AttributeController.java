@@ -19,4 +19,10 @@ public class AttributeController {
     AttributeDtoResponse getAttributeByProductId(@RequestParam Long productId, @RequestParam Long size ){
         return attributeService.getAttributeByProductId(productId,size);
     }
+    @GetMapping()
+    @Operation(summary = "Lấy chi tiết theo id")
+    AttributeDtoResponse getAttributeById(@RequestParam Long id){
+        return attributeService.getAttributeById(id);
+    }
+
 }

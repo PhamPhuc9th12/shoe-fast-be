@@ -12,5 +12,6 @@ public class CodeAndMessage {
     public static final String ERR2 = "ERR2-Account is not exist!";
     public static final String ERR3 = "ERR3-Data is not exist!";
     public static final String ERR4 = "ERR4-No authorization";
+    public static final String ERR5 = "ERR5-Stock is not enough";
 
 }
