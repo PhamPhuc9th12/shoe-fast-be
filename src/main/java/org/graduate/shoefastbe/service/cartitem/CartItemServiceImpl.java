@@ -3,6 +3,9 @@ package org.graduate.shoefastbe.service.cartitem;
 import lombok.AllArgsConstructor;
 import org.aspectj.apache.bcel.classfile.Code;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
+import org.graduate.shoefastbe.base.error_success_handle.SuccessHandle;
+import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
+import org.graduate.shoefastbe.common.Common;
 import org.graduate.shoefastbe.dto.cart.CartItemDetailResponse;
 import org.graduate.shoefastbe.dto.cart.CartItemDtoRequest;
 import org.graduate.shoefastbe.dto.cart.CartItemDtoResponse;
@@ -109,16 +112,30 @@ public class CartItemServiceImpl implements CartItemService{
                     AttributeEntity attribute = attributeMap.get(cartItemEntity.getAttributeId());
                     return CartItemDetailResponse
                             .builder()
+                            .id(attribute.getId())
                             .size(attribute.getSize())
                             .stock(attribute.getStock())
                             .price(attribute.getPrice())
                             .name(attribute.getName())
-                            .image("image")
+                            .image(Common.DEFAULT_IMAGE)
                             .discount(salesEntityMap.get(productSaleMap.get(attribute.getProductId())).getDiscount())
                             .quantity(cartItemEntity.getQuantity())
                             .lastPrice(cartItemEntity.getLastPrice())
                             .build();
                 }
         ).collect(Collectors.toList());
+    }
+
+    @Override
+    public SuccessResponse removeCartItem(CartItemDtoRequest cartItemDtoRequest) {
+        CartItemEntity cartItem = cartItemRepository.findCartItemByAccountIdAndAttributeId(cartItemDtoRequest.getAccountId(),
+                cartItemDtoRequest.getAttributeId());
+        if(cartItem == null){
+            throw new RuntimeException(CodeAndMessage.ERR3);
+        }
+        cartItem.setQuantity(0L);
+        cartItem.setIsActive(Boolean.FALSE);
+        cartItemRepository.save(cartItem);
+        return SuccessHandle.success(CodeAndMessage.ME100);
     }
 }

@@ -2,6 +2,7 @@ package org.graduate.shoefastbe.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
+import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.dto.cart.CartItemDetailResponse;
 import org.graduate.shoefastbe.dto.cart.CartItemDtoRequest;
 import org.graduate.shoefastbe.dto.cart.CartItemDtoResponse;
@@ -32,6 +33,12 @@ public class CartItemController {
     @Operation(summary = "Lấy sản phẩm giỏ hàng của tài khoản")
     List<CartItemDetailResponse> getCartItemByAccount(@RequestParam Long id){
         return cartItemService.getCartItemDetailByAccount(id);
+    }
+
+    @PostMapping("/remove")
+    @Operation(summary = "Xóa sản phẩm khỏi giỏ hàng")
+    SuccessResponse removeCartItem(@RequestBody CartItemDtoRequest cartItemDtoRequest){
+        return cartItemService.removeCartItem(cartItemDtoRequest);
     }
 
 }

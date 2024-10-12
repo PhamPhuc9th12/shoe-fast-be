@@ -13,5 +13,9 @@ public class CodeAndMessage {
     public static final String ERR3 = "ERR3-Data is not exist!";
     public static final String ERR4 = "ERR4-No authorization";
     public static final String ERR5 = "ERR5-Stock is not enough";
+    public static final String ERR6 = "ERR6-Voucher is expired!!";
+    public static final String ERR7 = "ERR7-Voucher is inactive!!";
+    public static final String ERR8 = "ERR8-Voucher is not enough!!";
+
 
 }
