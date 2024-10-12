@@ -75,7 +75,7 @@ public class ProductServiceImpl implements ProductService {
                             .code(product.getCode())
                             .view(product.getView())
                             .description(product.getDescription())
-                            .image("image")
+                            .image(Common.DEFAULT_IMAGE)
                             .discount(salesEntityMap.get(product.getSaleId()).getDiscount())
                             .isActive(product.getIsActive())
                             .build();
@@ -102,13 +102,17 @@ public class ProductServiceImpl implements ProductService {
         SalesEntity salesEntity = salesRepository.findById(product.getSaleId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
+        List<String> imgURLs = new ArrayList<>();
+        for(int i = 0; i<6 ; i++){
+            imgURLs.add(Common.DEFAULT_IMAGE);
+        }
         return ProductDetailResponse.builder()
                 .attributes(attributeEntities)
-                .main("link")
+                .main(Common.DEFAULT_IMAGE)
                 .price(price)
                 .brandId(product.getBrandId())
                 .categoryIds(categoryEntities.stream().map(ProductCategoryEntity::getCategoryId).collect(Collectors.toList()))
-                .images(new ArrayList<>())
+                .images(imgURLs)
                 .saleId(product.getSaleId())
                 .brand(brandsEntity.getName())
                 .code(product.getCode())
@@ -165,7 +169,7 @@ public class ProductServiceImpl implements ProductService {
                             .code(product.getCode())
                             .view(product.getView())
                             .description(product.getDescription())
-                            .image("image")
+                            .image(Common.DEFAULT_IMAGE)
                             .discount(salesEntityMap.get(product.getSaleId()).getDiscount())
                             .isActive(product.getIsActive())
                             .build();
