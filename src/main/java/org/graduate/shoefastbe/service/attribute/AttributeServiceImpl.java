@@ -7,11 +7,13 @@ import org.graduate.shoefastbe.entity.AttributeEntity;
 import org.graduate.shoefastbe.mapper.AttributeMapper;
 import org.graduate.shoefastbe.repository.AttributeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
 @Service
 @AllArgsConstructor
+@Transactional(readOnly = true)
 public class AttributeServiceImpl implements AttributeService {
     private final AttributeRepository attributeRepository;
     private final AttributeMapper attributeMapper;

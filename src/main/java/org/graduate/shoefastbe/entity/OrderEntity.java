@@ -18,7 +18,8 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-    private String fullname;
+    @Column(name = "fullname")
+    private String fullName;
     private String phone;
     private String address;
     private String email;

@@ -10,6 +10,7 @@ import org.graduate.shoefastbe.entity.VoucherEntity;
 import org.graduate.shoefastbe.mapper.VoucherMapper;
 import org.graduate.shoefastbe.repository.VoucherRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -19,6 +20,7 @@ import java.util.Optional;
 @Getter
 @Setter
 @Service
+@Transactional(readOnly = true)
 public class VoucherServiceImpl implements VoucherService{
     private final VoucherRepository voucherRepository;
     private final VoucherMapper voucherMapper;

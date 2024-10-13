@@ -13,6 +13,7 @@ import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.CartItemMapper;
 import org.graduate.shoefastbe.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Transactional(readOnly = true)
 public class CartItemServiceImpl implements CartItemService{
     private final CartItemMapper cartItemMapper;
     private final CartItemRepository cartItemRepository;
@@ -31,6 +33,7 @@ public class CartItemServiceImpl implements CartItemService{
     private final SalesRepository salesRepository;
     private final ProductRepository productRepository;
     @Override
+    @Transactional
     public CartItemDtoResponse modifyCartItem(CartItemDtoRequest cartItemDtoRequest) {
         AttributeEntity attributeEntity = attributeRepository.findById(cartItemDtoRequest.getAttributeId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
@@ -127,6 +130,7 @@ public class CartItemServiceImpl implements CartItemService{
     }
 
     @Override
+    @Transactional
     public SuccessResponse removeCartItem(CartItemDtoRequest cartItemDtoRequest) {
         CartItemEntity cartItem = cartItemRepository.findCartItemByAccountIdAndAttributeId(cartItemDtoRequest.getAccountId(),
                 cartItemDtoRequest.getAttributeId());

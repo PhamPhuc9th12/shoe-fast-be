@@ -23,6 +23,6 @@ public class OrderDtoRequest {
     private Boolean isPending;
     private Long accountId;
     private Collection<OrderDetailEntity> orderDetails;
-    private String code;
+    private String code; // voucherCode
     private String payment;
 }
