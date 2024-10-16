@@ -6,11 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.collections4.Get;
+import org.graduate.shoefastbe.dto.order.CancelOrderRequest;
 import org.graduate.shoefastbe.dto.order.OrderDetailResponse;
 import org.graduate.shoefastbe.dto.order.OrderDtoRequest;
 import org.graduate.shoefastbe.dto.order.OrderDtoResponse;
 import org.graduate.shoefastbe.entity.OrderDetailEntity;
+import org.graduate.shoefastbe.entity.OrderStatusEntity;
 import org.graduate.shoefastbe.service.order.OrderService;
+import org.springdoc.api.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,6 +42,24 @@ public class OrderController {
     @Operation(summary = "Lấy thông tin chi tiết đơn hàng")
     List<OrderDetailResponse> getOrderDetail(@RequestParam Long orderId){
         return orderService.getOrderDetail(orderId);
+    }
+
+    @GetMapping("/order-status")
+    @Operation(summary = "Lấy thông tin chi tiết trạng thái đơn hàng")
+    List<OrderStatusEntity> getAllOrderStatus(){
+        return orderService.getAllOrderStatus();
+    }
+    @GetMapping("/list")
+    @Operation(summary = "Lấy danh sách đơn hàng")
+    Page<OrderDtoResponse> getAllOrderStatus(@RequestParam Long accountId,
+                                             @RequestParam Long orderStatusId,
+                                             @ParameterObject Pageable pageable){
+        return orderService.getAllOrders(accountId, orderStatusId, pageable);
+    }
+    @PostMapping("/cancel")
+    @Operation(summary = "Xóa đơn hàng")
+    OrderDtoResponse cancelOrder(@RequestBody CancelOrderRequest cancelOrderRequest){
+        return orderService.getCancelOrder(cancelOrderRequest);
     }
 
 }

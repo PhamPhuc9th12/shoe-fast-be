@@ -17,6 +17,6 @@ public class NotificationEntity {
     private String content;
     private Boolean read;
     private Boolean deliver;
-    private Long order_id;
+    private Long orderId;
     private Long type;
 }

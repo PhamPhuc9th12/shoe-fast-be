@@ -32,4 +32,5 @@ public class OrderDtoResponse {
     private Long accountId;
     private Long voucherId;
     private Long orderStatusId;
+    private String orderStatusName;
 }
