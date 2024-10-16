@@ -16,11 +16,9 @@ import java.util.Properties;
 @Getter
 @Setter
 public class MailUtil {
-    @Value("${spring.mail.username}")
-    private static String email;
+    private static final String email = "pphuc9122002@gmail.com";
 
-    @Value("${spring.mail.password}")
-    private static String password;
+    private static final String password = "efxxykccrzktdmmv";
 
     public static void sendEmailOrder(OrderEntity order) throws MessagingException {
         Properties props = new Properties();
