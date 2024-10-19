@@ -1,9 +1,6 @@
 package org.graduate.shoefastbe.service.order;
 
-import org.graduate.shoefastbe.dto.order.CancelOrderRequest;
-import org.graduate.shoefastbe.dto.order.OrderDetailResponse;
-import org.graduate.shoefastbe.dto.order.OrderDtoRequest;
-import org.graduate.shoefastbe.dto.order.OrderDtoResponse;
+import org.graduate.shoefastbe.dto.order.*;
 import org.graduate.shoefastbe.entity.OrderDetailEntity;
 import org.graduate.shoefastbe.entity.OrderEntity;
 import org.graduate.shoefastbe.entity.OrderStatusEntity;
@@ -21,4 +18,8 @@ public interface OrderService {
     List<OrderStatusEntity> getAllOrderStatus();
     Page<OrderDtoResponse> getAllOrders (Long accountId, Long orderStatusId, Pageable pageable);
     OrderDtoResponse getCancelOrder(CancelOrderRequest cancelOrderRequest);
+
+    //admin
+
+    List<CountResponse> getCountOrder();
 }

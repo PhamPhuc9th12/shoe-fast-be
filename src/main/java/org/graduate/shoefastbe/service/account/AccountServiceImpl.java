@@ -8,8 +8,10 @@ import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.enums.RoleEnums;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
 import org.graduate.shoefastbe.dto.account.*;
+import org.graduate.shoefastbe.dto.order.CountResponse;
 import org.graduate.shoefastbe.entity.AccountDetailEntity;
 import org.graduate.shoefastbe.entity.AccountEntity;
+import org.graduate.shoefastbe.entity.OrderEntity;
 import org.graduate.shoefastbe.mapper.AccountDetailMapper;
 import org.graduate.shoefastbe.mapper.AccountMapper;
 import org.graduate.shoefastbe.repository.AccountDetailRepository;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -101,6 +104,11 @@ public class AccountServiceImpl implements AccountService {
         accountDetailMapper.updateEntityByUpdateAccount(accountDetailEntity, accountUpdateRequest);
         accountDetailRepository.save(accountDetailEntity);
         return accountDetailEntity;
+    }
+
+    @Override
+    public Long countAccount() {
+        return accountRepository.count();
     }
 
     private AccountResponse getAccountDetail(AccountEntity accountEntity, Long id){

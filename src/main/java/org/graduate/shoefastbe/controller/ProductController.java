@@ -48,4 +48,12 @@ public class ProductController {
                                               @ParameterObject Pageable pageable){
         return productService.getProductBySearch(search, pageable);
     }
+
+    @GetMapping("/count")
+    @Operation(summary = "Lấy số lượng product")
+    Long countByProduct(){
+        return productService.countProduct();
+    }
+
+
 }

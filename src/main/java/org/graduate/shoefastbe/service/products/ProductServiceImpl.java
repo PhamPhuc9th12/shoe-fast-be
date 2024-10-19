@@ -136,6 +136,11 @@ public class ProductServiceImpl implements ProductService {
         return getProductDtoResponses(productEntities);
     }
 
+    @Override
+    public Long countProduct() {
+        return productRepository.count();
+    }
+
     private Page<ProductDtoResponse> getProductDtoResponses(Page<ProductEntity> productEntities) {
         List<AttributeEntity> attributeEntities = customRepository.getAttributeByProductId(productEntities
                 .stream().map(ProductEntity::getId).collect(Collectors.toSet()));

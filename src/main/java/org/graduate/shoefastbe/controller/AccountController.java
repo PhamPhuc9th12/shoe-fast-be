@@ -51,5 +51,12 @@ public class AccountController {
         return accountService.updateProfile(accountUpdateRequest);
     }
 
+    //admin
+    @GetMapping("/admin/count")
+    @Operation(summary = "Số lượng tài khoản")
+    Long countAccount(){
+        return accountService.countAccount();
+    }
+
 
 }

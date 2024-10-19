@@ -3,10 +3,7 @@ package org.graduate.shoefastbe.service.order;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
-import org.graduate.shoefastbe.dto.order.CancelOrderRequest;
-import org.graduate.shoefastbe.dto.order.OrderDetailResponse;
-import org.graduate.shoefastbe.dto.order.OrderDtoRequest;
-import org.graduate.shoefastbe.dto.order.OrderDtoResponse;
+import org.graduate.shoefastbe.dto.order.*;
 import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.OrderMapper;
 import org.graduate.shoefastbe.repository.*;
@@ -18,10 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -194,6 +188,27 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         notificationRepository.save(notification);
         return orderMapper.getResponseByEntity(order);
+    }
+
+    @Override
+    public List<CountResponse> getCountOrder() {
+        List<OrderEntity> orderEntityList = orderRepository.findAll();
+        Map<Long,List<OrderEntity>> orderMap = orderEntityList.stream().collect(Collectors.groupingBy(
+                OrderEntity::getOrderStatusId, Collectors.mapping(Function.identity(),Collectors.toList())
+        ));
+        Map<Long, OrderStatusEntity> statusEntityMap = orderStatusRepository.findAllByIdIn(orderEntityList.stream().map(OrderEntity::getOrderStatusId).collect(Collectors.toList()))
+                .stream().collect(Collectors.toMap(OrderStatusEntity::getId, Function.identity()));
+        List<CountResponse> countResponses = new ArrayList<>();
+        orderMap.forEach(
+                (statusId, orderEntities) -> {
+                    CountResponse countResponse = CountResponse.builder()
+                            .name(statusEntityMap.get(statusId).getName())
+                            .count((long) orderMap.get(statusId).size())
+                            .build();
+                    countResponses.add(countResponse);
+                }
+        );
+        return countResponses;
     }
 
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, OrderEntity orderEntity) {
