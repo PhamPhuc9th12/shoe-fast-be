@@ -169,7 +169,7 @@ public class OrderServiceImpl implements OrderService {
             attribute.setCache(attribute.getCache() - orderDetail.getQuantity());
             attributeRepository.save(attribute);
         }
-        if(Objects.nonNull(order.getVoucherId())){
+        if (Objects.nonNull(order.getVoucherId())) {
             VoucherEntity voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
@@ -191,10 +191,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<CountResponse> getCountOrder() {
+    public List<CountResponse> getCountOrderByStatus() {
         List<OrderEntity> orderEntityList = orderRepository.findAll();
-        Map<Long,List<OrderEntity>> orderMap = orderEntityList.stream().collect(Collectors.groupingBy(
-                OrderEntity::getOrderStatusId, Collectors.mapping(Function.identity(),Collectors.toList())
+        Map<Long, List<OrderEntity>> orderMap = orderEntityList.stream().collect(Collectors.groupingBy(
+                OrderEntity::getOrderStatusId, Collectors.mapping(Function.identity(), Collectors.toList())
         ));
         Map<Long, OrderStatusEntity> statusEntityMap = orderStatusRepository.findAllByIdIn(orderEntityList.stream().map(OrderEntity::getOrderStatusId).collect(Collectors.toList()))
                 .stream().collect(Collectors.toMap(OrderStatusEntity::getId, Function.identity()));
@@ -209,6 +209,40 @@ public class OrderServiceImpl implements OrderService {
                 }
         );
         return countResponses;
+    }
+
+    @Override
+    public Long countOrder() {
+        return orderRepository.count();
+    }
+
+    @Override
+    public List<YearSynthesis> getReportYear() {
+        List<YearSynthesis> yearSyntheses = new ArrayList<>();
+        List<OrderEntity> orderEntities = orderRepository.findAll();
+        OrderStatusEntity orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
+        Map<Integer, List<OrderEntity>> yearOrderEntities = orderEntities.stream()
+                .collect(Collectors.groupingBy(
+                        orderEntity -> orderEntity.getCreateDate().getYear() // Lấy năm từ createDate và nhóm theo năm
+                ));
+        yearOrderEntities.forEach(
+                (year, orderList) -> {
+                    List<OrderEntity> countOrderEntities = orderList.stream().filter(
+                            orderEntity -> orderStatus.getId().equals(orderEntity.getOrderStatusId())
+                    ).collect(Collectors.toList());
+                    Double total = 0d;
+                    for(OrderEntity order: countOrderEntities){
+                        total += order.getTotal();
+                    }
+                    YearSynthesis synthesis = YearSynthesis.builder()
+                            .year((long) year)
+                            .count((long)countOrderEntities.size())
+                            .total(total)
+                            .build();
+                    yearSyntheses.add(synthesis);
+                }
+        );
+        return yearSyntheses;
     }
 
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, OrderEntity orderEntity) {

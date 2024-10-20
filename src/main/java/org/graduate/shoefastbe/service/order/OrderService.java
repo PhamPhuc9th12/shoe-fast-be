@@ -20,6 +20,7 @@ public interface OrderService {
     OrderDtoResponse getCancelOrder(CancelOrderRequest cancelOrderRequest);
 
     //admin
-
-    List<CountResponse> getCountOrder();
+    List<CountResponse> getCountOrderByStatus();
+    Long countOrder();
+    List<YearSynthesis> getReportYear();
 }

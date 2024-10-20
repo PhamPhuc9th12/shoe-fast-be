@@ -6,10 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.collections4.Get;
-import org.graduate.shoefastbe.dto.order.CancelOrderRequest;
-import org.graduate.shoefastbe.dto.order.OrderDetailResponse;
-import org.graduate.shoefastbe.dto.order.OrderDtoRequest;
-import org.graduate.shoefastbe.dto.order.OrderDtoResponse;
+import org.graduate.shoefastbe.dto.order.*;
 import org.graduate.shoefastbe.entity.OrderDetailEntity;
 import org.graduate.shoefastbe.entity.OrderStatusEntity;
 import org.graduate.shoefastbe.service.order.OrderService;
@@ -61,5 +58,18 @@ public class OrderController {
     OrderDtoResponse cancelOrder(@RequestBody CancelOrderRequest cancelOrderRequest){
         return orderService.getCancelOrder(cancelOrderRequest);
     }
+
+    // admin
+    @GetMapping("/list/count")
+    @Operation(summary = "Lấy số lượng đơn hàng")
+    List<CountResponse> getAllOrderCount(){
+        return orderService.getCountOrderByStatus();
+    }
+    @GetMapping("/count")
+    @Operation(summary = "Đếm số lượng đơn hàng")
+    Long getCountOrder(){
+        return orderService.countOrder();
+    }
+
 
 }
