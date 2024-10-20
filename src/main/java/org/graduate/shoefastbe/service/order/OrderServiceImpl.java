@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
 import org.graduate.shoefastbe.dto.order.*;
+import org.graduate.shoefastbe.dto.product.ProductReport;
 import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.OrderMapper;
 import org.graduate.shoefastbe.repository.*;
@@ -243,6 +244,11 @@ public class OrderServiceImpl implements OrderService {
                 }
         );
         return yearSyntheses;
+    }
+
+    @Override
+    public Page<ProductReport> getReportByProduct(Pageable pageable) {
+        return null;
     }
 
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, OrderEntity orderEntity) {

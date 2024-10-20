@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.collections4.Get;
 import org.graduate.shoefastbe.dto.order.*;
+import org.graduate.shoefastbe.dto.product.ProductReport;
 import org.graduate.shoefastbe.entity.OrderDetailEntity;
 import org.graduate.shoefastbe.entity.OrderStatusEntity;
 import org.graduate.shoefastbe.service.order.OrderService;
@@ -69,6 +70,16 @@ public class OrderController {
     @Operation(summary = "Đếm số lượng đơn hàng")
     Long getCountOrder(){
         return orderService.countOrder();
+    }
+    @GetMapping("/synthesis/year")
+    @Operation(summary = "Lấy thống kê theo năm")
+    List<YearSynthesis> getYearSynthesis(){
+        return orderService.getReportYear();
+    }
+    @GetMapping("/synthesis/year")
+    @Operation(summary = "Lấy thống kê theo năm")
+    Page<ProductReport> getReportProduct(@ParameterObject Pageable pageable){
+        return orderService.getReportByProduct(pageable);
     }
 
 

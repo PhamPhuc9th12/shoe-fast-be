@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.order;
 
 import org.graduate.shoefastbe.dto.order.*;
+import org.graduate.shoefastbe.dto.product.ProductReport;
 import org.graduate.shoefastbe.entity.OrderDetailEntity;
 import org.graduate.shoefastbe.entity.OrderEntity;
 import org.graduate.shoefastbe.entity.OrderStatusEntity;
@@ -23,4 +24,5 @@ public interface OrderService {
     List<CountResponse> getCountOrderByStatus();
     Long countOrder();
     List<YearSynthesis> getReportYear();
+    Page<ProductReport> getReportByProduct(Pageable pageable);
 }
