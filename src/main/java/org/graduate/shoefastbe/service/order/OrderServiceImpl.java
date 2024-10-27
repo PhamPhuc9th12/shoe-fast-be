@@ -10,6 +10,7 @@ import org.graduate.shoefastbe.mapper.OrderMapper;
 import org.graduate.shoefastbe.repository.*;
 import org.graduate.shoefastbe.util.MailUtil;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final AttributeRepository attributeRepository;
     private final NotificationRepository notificationRepository;
     private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
@@ -248,7 +250,44 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<ProductReport> getReportByProduct(Pageable pageable) {
-        return null;
+        OrderStatusEntity orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
+        List<OrderEntity> orderEntities = orderRepository.findAllByOrderStatusId(orderStatus.getId());
+        List<OrderDetailEntity> orderDetailEntities = orderDetailRepository.findAllByOrderIdIn(orderEntities.stream()
+                .map(OrderEntity::getId).collect(Collectors.toList()));
+        Map<Long, List<OrderDetailEntity>> orderAttributeMap = orderDetailEntities.stream().collect(Collectors.groupingBy(
+                OrderDetailEntity::getAttributeId, Collectors.mapping(Function.identity(), Collectors.toList())
+        ));
+
+        List<AttributeEntity> attributeEntities = attributeRepository.findAllByIdIn(orderDetailEntities.stream()
+                .map(OrderDetailEntity::getAttributeId).collect(Collectors.toSet()));
+        Map<Long, List<AttributeEntity>> productAttributeMap = attributeEntities.stream().collect(Collectors.groupingBy(
+                AttributeEntity::getProductId, Collectors.mapping(Function.identity(), Collectors.toList())
+        ));
+        List<ProductEntity> productEntities = productRepository.findAllByIdIn(attributeEntities.stream().map(AttributeEntity::getProductId)
+                .collect(Collectors.toSet()));
+        List<ProductReport> productReports = new ArrayList<>();
+        for(ProductEntity product : productEntities){
+            List<AttributeEntity> attributeList = productAttributeMap.get(product.getId());
+            double totalAmount = 0d;
+            long orderCount = 0L;
+            long quantityProduct = 0L;
+            for(AttributeEntity attribute : attributeList){
+                List<OrderDetailEntity> orderDetailEntityList = orderAttributeMap.get(attribute.getId());
+                for(OrderDetailEntity orderDetail : orderDetailEntityList){
+                    totalAmount += orderDetail.getQuantity() * orderDetail.getSellPrice();
+                    quantityProduct += orderDetail.getQuantity();
+                }
+                orderCount = orderDetailEntityList.stream().map(OrderDetailEntity::getOrderId).collect(Collectors.toSet()).size();
+            }
+            ProductReport productReport = ProductReport.builder()
+                    .amount(totalAmount)
+                    .name(product.getName())
+                    .count(orderCount)
+                    .quantity(quantityProduct)
+                    .build();
+            productReports.add(productReport);
+        }
+        return new PageImpl<>(productReports, pageable, productReports.size());
     }
 
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, OrderEntity orderEntity) {

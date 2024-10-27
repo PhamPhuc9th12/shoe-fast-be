@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     Page<OrderEntity> findAllByAccountId(Long accountId, Pageable pageable);
     Page<OrderEntity> findAllByAccountIdAndOrderStatusId(Long accountId, Long orderStatusId, Pageable pageable);
-//    @Query("SELECT o FROM OrderEntity o WHERE YEAR(o.createDate) = YEAR(CURRENT_TIMESTAMP)")
-//    List<OrderEntity> findAllByYear();
+
+    List<OrderEntity> findAllByOrderStatusId(Long orderStatusId);
 
 }

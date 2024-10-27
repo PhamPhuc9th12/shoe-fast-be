@@ -76,11 +76,10 @@ public class OrderController {
     List<YearSynthesis> getYearSynthesis(){
         return orderService.getReportYear();
     }
-    @GetMapping("/synthesis/year")
-    @Operation(summary = "Lấy thống kê theo năm")
+    @GetMapping("/synthesis/product")
+    @Operation(summary = "Lấy thống kê theo sản phẩm")
     Page<ProductReport> getReportProduct(@ParameterObject Pageable pageable){
         return orderService.getReportByProduct(pageable);
     }
-
 
 }

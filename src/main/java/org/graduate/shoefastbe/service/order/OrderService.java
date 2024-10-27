@@ -20,9 +20,11 @@ public interface OrderService {
     Page<OrderDtoResponse> getAllOrders (Long accountId, Long orderStatusId, Pageable pageable);
     OrderDtoResponse getCancelOrder(CancelOrderRequest cancelOrderRequest);
 
+
     //admin
     List<CountResponse> getCountOrderByStatus();
     Long countOrder();
     List<YearSynthesis> getReportYear();
     Page<ProductReport> getReportByProduct(Pageable pageable);
+
 }
