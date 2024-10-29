@@ -16,6 +16,8 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     List<ProductEntity> findAllByBrandIdIn(Collection<Long> brandIds);
     List<ProductEntity> findAllByIdIn(Collection<Long> productIds);
+
+    Page<ProductEntity> findAllByBrandIdAndIsActive(Long productId,Boolean isActive, Pageable pageable);
     @Query("SELECT p FROM ProductEntity p" +
             " inner join AttributeEntity a on p.id = a.productId " +
             "where LOWER(p.name) like LOWER(CONCAT('%', :search, '%'))" +

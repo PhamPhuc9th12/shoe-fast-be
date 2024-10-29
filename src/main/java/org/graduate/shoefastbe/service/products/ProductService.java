@@ -17,4 +17,5 @@ public interface ProductService {
     Page<ProductDtoResponse> getProductRelate(Long productId, Long brandId, Pageable pageable);
     Page<ProductDtoResponse> getProductBySearch(String search, Pageable pageable);
     Long countProduct();
+    Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable);
 }

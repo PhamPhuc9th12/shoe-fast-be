@@ -2,6 +2,7 @@ package org.graduate.shoefastbe.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.*;
+import org.graduate.shoefastbe.dto.brands.BrandResponse;
 import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
 import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
 import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
@@ -55,5 +56,10 @@ public class ProductController {
         return productService.countProduct();
     }
 
+    @GetMapping("/by-brand")
+    Page<ProductDtoResponse> getAllProductByBrand(@RequestParam Long brandId,
+                                                  @ParameterObject Pageable pageable) {
+        return productService.getProductByBrand(brandId, pageable);
+    }
 
 }

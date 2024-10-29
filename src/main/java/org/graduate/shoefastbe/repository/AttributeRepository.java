@@ -12,6 +12,7 @@ import java.util.List;
 public interface AttributeRepository extends JpaRepository<AttributeEntity, Long> {
     List<AttributeEntity> findAllByProductIdAndSize(Long productId, Long size);
     List<AttributeEntity> findAllByProductId(Long productId);
+    List<AttributeEntity> findAllByProductIdIn(Collection<Long> productIds);
     List<AttributeEntity> findAllByIdIn(Collection<Long> ids);
     AttributeEntity findByProductIdAndSize(Long productId, Long size);
 }

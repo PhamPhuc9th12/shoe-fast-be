@@ -141,9 +141,16 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.count();
     }
 
+    @Override
+    public Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable) {
+        Page<ProductEntity> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,pageable);
+        return getProductDtoResponses(productEntities);
+    }
+
     private Page<ProductDtoResponse> getProductDtoResponses(Page<ProductEntity> productEntities) {
         List<AttributeEntity> attributeEntities = customRepository.getAttributeByProductId(productEntities
                 .stream().map(ProductEntity::getId).collect(Collectors.toSet()));
+
         Map<Long, AttributeEntity> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
                 AttributeEntity::getProductId, Function.identity()
         ));
