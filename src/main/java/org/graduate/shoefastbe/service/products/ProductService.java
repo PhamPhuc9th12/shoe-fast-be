@@ -1,5 +1,6 @@
 package org.graduate.shoefastbe.service.products;
 
+import org.graduate.shoefastbe.dto.product.CreateProductRequest;
 import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
 import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
 import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
@@ -18,4 +19,8 @@ public interface ProductService {
     Page<ProductDtoResponse> getProductBySearch(String search, Pageable pageable);
     Long countProduct();
     Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable);
+
+    //admin
+    ProductDtoResponse create( CreateProductRequest createProductRequest);
+
 }

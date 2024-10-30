@@ -16,6 +16,7 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     List<ProductEntity> findAllByBrandIdIn(Collection<Long> brandIds);
     List<ProductEntity> findAllByIdIn(Collection<Long> productIds);
+    ProductEntity findByCode(String code);
 
     Page<ProductEntity> findAllByBrandIdAndIsActive(Long productId,Boolean isActive, Pageable pageable);
     @Query("SELECT p FROM ProductEntity p" +
