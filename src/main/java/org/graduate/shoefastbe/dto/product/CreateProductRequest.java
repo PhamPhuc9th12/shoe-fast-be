@@ -11,6 +11,7 @@ import java.util.List;
 @Setter
 @Builder
 public class CreateProductRequest {
+    private Long id;
     private String name;
     private String code;
     private String description;

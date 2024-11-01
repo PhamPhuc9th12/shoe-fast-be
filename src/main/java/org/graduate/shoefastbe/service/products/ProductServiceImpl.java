@@ -216,6 +216,51 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.getResponseFromEntity(productEntity);
     }
 
+    @Override
+    public ProductDtoResponse update(CreateProductRequest createProductRequest) {
+        ProductEntity productEntity = productRepository.findById(createProductRequest.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        productMapper.update(productEntity, createProductRequest);
+        productEntity.setView(1L);
+        productEntity.setIsActive(Boolean.TRUE);
+        productRepository.save(productEntity);
+
+        List<Long> categoryIds = createProductRequest.getCategoryId();
+        for(Long id: categoryIds){
+            ProductCategoryEntity productCategory = productCategoryRepository.findById(id).orElseThrow(
+                    () -> new RuntimeException(CodeAndMessage.ERR3)
+            );
+            productCategory.setProductId(productEntity.getId());
+            productCategory.setCategoryId(id);
+            productCategoryRepository.save(productCategory);
+
+        }
+        /*Create attribute of product*/
+        List<AttributeDtoRequest> reqAttributeDtos = createProductRequest.getAttribute();
+        for(AttributeDtoRequest r: reqAttributeDtos){
+            AttributeEntity attribute = attributeRepository.findByProductIdAndSize(productEntity.getId(),39L);
+            if(Objects.nonNull(attribute)){
+                attribute.setStock(r.getStock());
+                attribute.setSize(r.getSize());
+                attribute.setPrice(r.getPrice());
+                attributeRepository.save(attribute);
+            }else{
+                attribute = new AttributeEntity();
+                attribute.setName(productEntity.getName());
+                attribute.setSize(r.getSize());
+                attribute.setPrice(r.getPrice());
+                attribute.setStock(r.getStock());
+                attribute.setCache(0L);
+                attribute.setCreateDate(LocalDate.now());
+                attribute.setModifyDate(LocalDate.now());
+                attribute.setProductId(productEntity.getId());
+                attributeRepository.save(attribute);
+            }
+        }
+        return productMapper.getResponseFromEntity(productEntity);
+    }
+
     private Page<ProductDtoResponse> getProductDtoResponses(Page<ProductEntity> productEntities) {
         List<AttributeEntity> attributeEntities = customRepository.getAttributeByProductId(productEntities
                 .stream().map(ProductEntity::getId).collect(Collectors.toSet()));

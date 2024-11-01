@@ -66,8 +66,13 @@ public class ProductController {
         return productService.getProductByBrand(brandId, pageable);
     }
 
-    @PostMapping()
+    @PostMapping("/create")
     ProductDtoResponse create(@RequestParam CreateProductRequest createProductRequest) {
+        return productService.create(createProductRequest);
+    }
+
+    @PostMapping("/modify")
+    ProductDtoResponse update(@RequestParam CreateProductRequest createProductRequest) {
         return productService.create(createProductRequest);
     }
 }

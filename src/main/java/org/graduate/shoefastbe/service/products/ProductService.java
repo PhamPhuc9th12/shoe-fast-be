@@ -22,5 +22,6 @@ public interface ProductService {
 
     //admin
     ProductDtoResponse create( CreateProductRequest createProductRequest);
+    ProductDtoResponse update( CreateProductRequest createProductRequest);
 
 }
