@@ -10,7 +10,7 @@ import javax.annotation.security.DenyAll;
 @Setter
 @Builder
 public class AttributeDtoRequest {
-    private Integer size;
+    private Long size;
     private Double price;
-    private Integer stock;
+    private Long stock;
 }
