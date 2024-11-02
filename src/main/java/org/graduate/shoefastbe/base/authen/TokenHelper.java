@@ -3,7 +3,7 @@ package org.graduate.shoefastbe.base.authen;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.graduate.shoefastbe.entity.AccountEntity;
+import org.graduate.shoefastbe.entity.Account;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
@@ -16,7 +16,7 @@ public class TokenHelper {
     private static final String ROLE = "role";
     private static final String JTI = "jti";
 
-    public static String generateToken(AccountEntity userEntity) {
+    public static String generateToken(Account userEntity) {
         OffsetDateTime nowOffsetDateTime = OffsetDateTime.now();
         OffsetDateTime expirationOffsetDateTime = nowOffsetDateTime.plusMinutes(100000);
 

@@ -1,21 +1,18 @@
 package org.graduate.shoefastbe.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.util.Collection;
 
 @Entity
 @Table(name = "attribute")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AttributeEntity {
+public class Attribute {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

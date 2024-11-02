@@ -8,10 +8,8 @@ import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.enums.RoleEnums;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
 import org.graduate.shoefastbe.dto.account.*;
-import org.graduate.shoefastbe.dto.order.CountResponse;
-import org.graduate.shoefastbe.entity.AccountDetailEntity;
-import org.graduate.shoefastbe.entity.AccountEntity;
-import org.graduate.shoefastbe.entity.OrderEntity;
+import org.graduate.shoefastbe.entity.AccountDetail;
+import org.graduate.shoefastbe.entity.Account;
 import org.graduate.shoefastbe.mapper.AccountDetailMapper;
 import org.graduate.shoefastbe.mapper.AccountMapper;
 import org.graduate.shoefastbe.repository.AccountDetailRepository;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,30 +38,30 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public SuccessResponse singUp(AccountCreateRequest account) {
         accountValidationHelper.signUpValidate(account);
-        AccountEntity accountEntity = accountMapper.getEntityFromRequest(account);
+        Account accountEntity = accountMapper.getEntityFromRequest(account);
         accountEntity.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt()));
         accountEntity.setIsActive(Boolean.TRUE);
         accountEntity.setRole(RoleEnums.CUSTOMER.name());
         accountEntity.setCreateDate(LocalDate.now());
         accountEntity.setModifyDate(LocalDate.now());
         accountRepository.saveAndFlush(accountEntity);
-        AccountDetailEntity accountDetailEntity = accountDetailMapper.getEntityFromRequest(account);
-        accountDetailEntity.setAccountId(accountEntity.getId());
-        accountDetailRepository.save(accountDetailEntity);
+        AccountDetail accountDetail = accountDetailMapper.getEntityFromRequest(account);
+        accountDetail.setAccountId(accountEntity.getId());
+        accountDetailRepository.save(accountDetail);
         return SuccessHandle.success(CodeAndMessage.ME106);
     }
 
     @Override
     public TokenAndRole login(LoginRequest loginRequest) {
-        AccountEntity userEntity = accountRepository.findByUsername(loginRequest.getUsername());
+        Account userEntity = accountRepository.findByUsername(loginRequest.getUsername());
         if (Objects.isNull(userEntity) || Boolean.FALSE.equals(userEntity.getIsActive())){
             throw new RuntimeException(CodeAndMessage.ERR4);
         }
         String currentHashedPassword = userEntity.getPassword();
-        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(userEntity.getId());
+        AccountDetail accountDetail = accountDetailRepository.findByAccountId(userEntity.getId());
         if (BCrypt.checkpw(loginRequest.getPassword(), currentHashedPassword)){
             String accessToken = TokenHelper.generateToken(userEntity);
-            return new TokenAndRole(accessToken, userEntity.getRole(), accountDetailEntity.getFullName());
+            return new TokenAndRole(accessToken, userEntity.getRole(), accountDetail.getFullName());
         }
         throw new RuntimeException(CodeAndMessage.ERR1);
     }
@@ -72,38 +69,38 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse findByUsername(String accessToken) {
         String username = TokenHelper.getUsernameFromToken(accessToken);
-        AccountEntity accountEntity = accountRepository.findByUsername(username);
-       return getAccountDetail(accountEntity, accountEntity.getId());
+        Account account = accountRepository.findByUsername(username);
+       return getAccountDetail(account, account.getId());
     }
 
     @Override
     @Transactional
     public SuccessResponse forgotPassword(ForgotPassRequest forgotPassRequest) throws MessagingException {
-        AccountEntity accountEntity = accountRepository.findByUsername(forgotPassRequest.getUsername());
-        if(Objects.isNull(accountEntity)) throw new RuntimeException(CodeAndMessage.ERR2);
+        Account account = accountRepository.findByUsername(forgotPassRequest.getUsername());
+        if(Objects.isNull(account)) throw new RuntimeException(CodeAndMessage.ERR2);
         String newPassword = String.valueOf(UUID.randomUUID());
-        accountEntity.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
-        accountRepository.saveAndFlush(accountEntity);
+        account.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        accountRepository.saveAndFlush(account);
         //gửi mail
-        AccountDetailEntity accountDetail = accountDetailRepository.findByAccountId(accountEntity.getId());
+        AccountDetail accountDetail = accountDetailRepository.findByAccountId(account.getId());
         MailUtil.sendmailForgotPassword(accountDetail.getEmail(), newPassword);
         return SuccessHandle.success(CodeAndMessage.ME100);
     }
 
     @Override
     public AccountResponse getDetailById(Long id) {
-        AccountEntity accountEntity = accountRepository.findById(id).orElseThrow(
+        Account account = accountRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR2)
         );
-        return getAccountDetail(accountEntity, id);
+        return getAccountDetail(account, id);
     }
     @Override
     @Transactional
-    public AccountDetailEntity updateProfile(AccountUpdateRequest accountUpdateRequest) {
-        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(accountUpdateRequest.getId());
-        accountDetailMapper.updateEntityByUpdateAccount(accountDetailEntity, accountUpdateRequest);
-        accountDetailRepository.save(accountDetailEntity);
-        return accountDetailEntity;
+    public AccountDetail updateProfile(AccountUpdateRequest accountUpdateRequest) {
+        AccountDetail accountDetail = accountDetailRepository.findByAccountId(accountUpdateRequest.getId());
+        accountDetailMapper.updateEntityByUpdateAccount(accountDetail, accountUpdateRequest);
+        accountDetailRepository.save(accountDetail);
+        return accountDetail;
     }
 
     @Override
@@ -111,21 +108,21 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.count();
     }
 
-    private AccountResponse getAccountDetail(AccountEntity accountEntity, Long id){
-        AccountDetailEntity accountDetailEntity = accountDetailRepository.findByAccountId(id);
+    private AccountResponse getAccountDetail(Account account, Long id){
+        AccountDetail accountDetail = accountDetailRepository.findByAccountId(id);
         return AccountResponse.builder()
-                .id(accountEntity.getId())
-                .address(accountDetailEntity.getAddress())
-                .email(accountDetailEntity.getEmail())
-                .phone(accountDetailEntity.getPhone())
-                .gender(accountDetailEntity.getGender())
-                .username(accountEntity.getUsername())
-                .birthDate(accountDetailEntity.getBirthdate())
-                .fullName(accountDetailEntity.getFullName())
-                .roleName(accountEntity.getRole())
-                .isActive(accountEntity.getIsActive())
-                .createDate(accountEntity.getCreateDate())
-                .modifyDate(accountEntity.getModifyDate())
+                .id(account.getId())
+                .address(accountDetail.getAddress())
+                .email(accountDetail.getEmail())
+                .phone(accountDetail.getPhone())
+                .gender(accountDetail.getGender())
+                .username(account.getUsername())
+                .birthDate(accountDetail.getBirthdate())
+                .fullName(accountDetail.getFullName())
+                .roleName(account.getRole())
+                .isActive(account.getIsActive())
+                .createDate(account.getCreateDate())
+                .modifyDate(account.getModifyDate())
                 .build();
     }
 }

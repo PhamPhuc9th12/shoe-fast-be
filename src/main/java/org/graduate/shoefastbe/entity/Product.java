@@ -11,14 +11,17 @@ import java.time.LocalDate;
 @Setter
 @Builder
 @Entity
-@Table(name = "accounts")
-public class AccountEntity {
+@Table(name = "products")
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
-    private String password;
-    private String role;
+    private String code;
+    private String description;
+    private String name;
+    private Long view;
+    private Long brandId;
+    private Long saleId;
     private Boolean isActive;
     private LocalDate createDate;
     private LocalDate modifyDate;

@@ -3,13 +3,10 @@ package org.graduate.shoefastbe.util;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.graduate.shoefastbe.entity.OrderEntity;
-import org.springframework.beans.factory.annotation.Value;
+import org.graduate.shoefastbe.entity.Order;
 
 import javax.mail.*;
 import javax.mail.internet.*;
-import java.io.IOException;
-import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
 @AllArgsConstructor
@@ -20,7 +17,7 @@ public class MailUtil {
 
     private static final String password = "efxxykccrzktdmmv";
 
-    public static void sendEmailOrder(OrderEntity order) throws MessagingException {
+    public static void sendEmailOrder(Order order) throws MessagingException {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");

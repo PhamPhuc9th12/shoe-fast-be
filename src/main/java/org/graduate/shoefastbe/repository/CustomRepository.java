@@ -3,10 +3,9 @@ package org.graduate.shoefastbe.repository;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.base.filter.Filter;
-import org.graduate.shoefastbe.common.Common;
-import org.graduate.shoefastbe.entity.AttributeEntity;
-import org.graduate.shoefastbe.entity.ProductCategoryEntity;
-import org.graduate.shoefastbe.entity.ProductEntity;
+import org.graduate.shoefastbe.entity.Attribute;
+import org.graduate.shoefastbe.entity.ProductCategory;
+import org.graduate.shoefastbe.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,22 +21,22 @@ public class CustomRepository {
     private final EntityManager entityManager;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductRepository productRepository;
-    public Page<ProductEntity> getProductRelate(Long productId, Long brandId, Pageable pageable) {
-        return Filter.builder(ProductEntity.class, entityManager)
+    public Page<Product> getProductRelate(Long productId, Long brandId, Pageable pageable) {
+        return Filter.builder(Product.class, entityManager)
                 .filter()
                 .isEqual("brandId", brandId)
                 .isNotIn("id", Collections.singleton(productId))
                 .getPage(pageable);
     }
 
-    public Page<ProductEntity> getProductBySearch(String search, Pageable pageable) {
-        return Filter.builder(ProductEntity.class, entityManager)
+    public Page<Product> getProductBySearch(String search, Pageable pageable) {
+        return Filter.builder(Product.class, entityManager)
                 .filter()
                 .isContain("name", search)
                 .getPage(pageable);
     }
-    public List<AttributeEntity> getAttributeByProductId(Collection<Long> productIds) {
-         List<AttributeEntity> attributeEntities = Filter.builder(AttributeEntity.class, entityManager)
+    public List<Attribute> getAttributeByProductId(Collection<Long> productIds) {
+         List<Attribute> attributeEntities = Filter.builder(Attribute.class, entityManager)
                 .filter()
                 .isEqual("size", 39L)
                 .isIn("productId", productIds)
@@ -47,16 +46,16 @@ public class CustomRepository {
         }
         return attributeEntities;
     }
-    public Page<AttributeEntity> getAttributeFilter(Collection<Long> brandIds, Collection<Long> categoryIds,
-                                                    Double min, Double max, Pageable pageable) {
-        List<Long> productBrandIds = productRepository.findAllByBrandIdIn(brandIds).stream().map(ProductEntity::getId)
+    public Page<Attribute> getAttributeFilter(Collection<Long> brandIds, Collection<Long> categoryIds,
+                                              Double min, Double max, Pageable pageable) {
+        List<Long> productBrandIds = productRepository.findAllByBrandIdIn(brandIds).stream().map(Product::getId)
                 .collect(Collectors.toList());
         List<Long> productCategoryIds = productCategoryRepository.findAllByCategoryIdIn(categoryIds).stream()
-                .map(ProductCategoryEntity::getId)
+                .map(ProductCategory::getId)
                 .collect(Collectors.toList());
         Set<Long> productIds = new HashSet<>(productBrandIds);
         productIds.addAll(productCategoryIds);
-        Page<AttributeEntity> attributeEntities = Filter.builder(AttributeEntity.class, entityManager)
+        Page<Attribute> attributeEntities = Filter.builder(Attribute.class, entityManager)
                 .filter()
                 .isEqual("size", 39L)
                 .isIn("productId", productIds)

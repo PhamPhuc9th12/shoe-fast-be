@@ -2,7 +2,7 @@ package org.graduate.shoefastbe.service.sale;
 
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.dto.sale.SaleResponse;
-import org.graduate.shoefastbe.entity.SalesEntity;
+import org.graduate.shoefastbe.entity.Sales;
 import org.graduate.shoefastbe.mapper.SaleMapper;
 import org.graduate.shoefastbe.repository.SalesRepository;
 import org.springframework.data.domain.Page;
@@ -17,7 +17,7 @@ public class SaleServiceImpl implements SaleService{
     @Override
     public Page<SaleResponse> getAllSale(Pageable pageable) {
 
-        Page<SalesEntity> entities = salesRepository.findAll(pageable);
+        Page<Sales> entities = salesRepository.findAll(pageable);
         return entities.map(saleMapper::getResponseBy);
     }
 }

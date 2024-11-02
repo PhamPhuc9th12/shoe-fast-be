@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.dto.brands.BrandRequest;
 import org.graduate.shoefastbe.dto.brands.BrandResponse;
-import org.graduate.shoefastbe.entity.BrandsEntity;
-import org.graduate.shoefastbe.entity.ProductEntity;
+import org.graduate.shoefastbe.entity.Brands;
+import org.graduate.shoefastbe.entity.Product;
 import org.graduate.shoefastbe.mapper.BrandsMapper;
 import org.graduate.shoefastbe.repository.BrandsRepository;
 import org.graduate.shoefastbe.repository.ProductRepository;
@@ -27,42 +27,42 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public Page<BrandResponse> getAllBrand(Pageable pageable) {
-        Page<BrandsEntity> brandsEntities = brandsRepository.findAll(pageable);
+        Page<Brands> brandsEntities = brandsRepository.findAll(pageable);
         return brandsEntities.map(brandsMapper::getResponseBy);
     }
 
     @Override
     @Transactional
     public BrandResponse create(BrandRequest brandRequest) {
-        BrandsEntity brandsEntity = brandsMapper.getEntityBy(brandRequest);
-        brandsRepository.save(brandsEntity);
-        return brandsMapper.getResponseBy(brandsEntity);
+        Brands brands = brandsMapper.getEntityBy(brandRequest);
+        brandsRepository.save(brands);
+        return brandsMapper.getResponseBy(brands);
     }
 
     @Override
     public BrandResponse getDetail(Long id) {
-        BrandsEntity brandsEntity = brandsRepository.findById(id).orElseThrow(
+        Brands brands = brandsRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        return brandsMapper.getResponseBy(brandsEntity);
+        return brandsMapper.getResponseBy(brands);
     }
 
     @Override
     public BrandResponse update(BrandRequest brandRequest) {
-        BrandsEntity brandsEntity = brandsRepository.findById(brandRequest.getId()).orElseThrow(
+        Brands brands = brandsRepository.findById(brandRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        brandsMapper.update(brandsEntity, brandRequest);
-        brandsRepository.save(brandsEntity);
-        List<ProductEntity> productEntities = productRepository.findAllByBrandIdIn(Collections.singleton(brandsEntity.getId()));
-        for(ProductEntity product : productEntities){
-            if(Boolean.FALSE.equals(brandsEntity.getIsActive())){
+        brandsMapper.update(brands, brandRequest);
+        brandsRepository.save(brands);
+        List<Product> productEntities = productRepository.findAllByBrandIdIn(Collections.singleton(brands.getId()));
+        for(Product product : productEntities){
+            if(Boolean.FALSE.equals(brands.getIsActive())){
                 product.setIsActive(Boolean.FALSE);
             }else{
                 product.setIsActive(Boolean.TRUE);
             }
             productRepository.save(product);
         }
-        return brandsMapper.getResponseBy(brandsEntity);
+        return brandsMapper.getResponseBy(brands);
     }
 }

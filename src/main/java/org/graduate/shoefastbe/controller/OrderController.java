@@ -2,14 +2,9 @@ package org.graduate.shoefastbe.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.apache.commons.collections4.Get;
 import org.graduate.shoefastbe.dto.order.*;
 import org.graduate.shoefastbe.dto.product.ProductReport;
-import org.graduate.shoefastbe.entity.OrderDetailEntity;
-import org.graduate.shoefastbe.entity.OrderStatusEntity;
+import org.graduate.shoefastbe.entity.OrderStatus;
 import org.graduate.shoefastbe.service.order.OrderService;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -44,7 +39,7 @@ public class OrderController {
 
     @GetMapping("/order-status")
     @Operation(summary = "Lấy thông tin chi tiết trạng thái đơn hàng")
-    List<OrderStatusEntity> getAllOrderStatus(){
+    List<OrderStatus> getAllOrderStatus(){
         return orderService.getAllOrderStatus();
     }
     @GetMapping("/list")

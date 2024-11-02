@@ -1,7 +1,6 @@
 package org.graduate.shoefastbe.repository;
 
-import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
-import org.graduate.shoefastbe.entity.ProductEntity;
+import org.graduate.shoefastbe.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,16 +12,16 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
-    List<ProductEntity> findAllByBrandIdIn(Collection<Long> brandIds);
-    List<ProductEntity> findAllByIdIn(Collection<Long> productIds);
-    ProductEntity findByCode(String code);
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    List<Product> findAllByBrandIdIn(Collection<Long> brandIds);
+    List<Product> findAllByIdIn(Collection<Long> productIds);
+    Product findByCode(String code);
 
-    Page<ProductEntity> findAllByBrandIdAndIsActive(Long productId,Boolean isActive, Pageable pageable);
-    @Query("SELECT p FROM ProductEntity p" +
-            " inner join AttributeEntity a on p.id = a.productId " +
+    Page<Product> findAllByBrandIdAndIsActive(Long productId, Boolean isActive, Pageable pageable);
+    @Query("SELECT p FROM Product p" +
+            " inner join Attribute a on p.id = a.productId " +
             "where LOWER(p.name) like LOWER(CONCAT('%', :search, '%'))" +
             " or LOWER(p.code) like LOWER(CONCAT('%', :search, '%'))")
-    Page<ProductEntity> getProductBySearch(@Param("search") String search, Pageable pageable);
+    Page<Product> getProductBySearch(@Param("search") String search, Pageable pageable);
 
 }

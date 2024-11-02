@@ -10,14 +10,11 @@ import javax.persistence.*;
 @Setter
 @Builder
 @Entity
-@Table(name = "order_detail")
-public class OrderDetailEntity {
+@Table(name = "product_category")
+public class ProductCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Double originPrice;
-    private Long quantity;
-    private Double sellPrice;
-    private Long attributeId;
-    private Long orderId;
+    private Long categoryId;
+    private Long productId;
 }

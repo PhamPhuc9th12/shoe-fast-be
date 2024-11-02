@@ -6,7 +6,7 @@ import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.Common;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
 import org.graduate.shoefastbe.dto.account.*;
-import org.graduate.shoefastbe.entity.AccountDetailEntity;
+import org.graduate.shoefastbe.entity.AccountDetail;
 import org.graduate.shoefastbe.service.account.AccountService;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +47,7 @@ public class AccountController {
     }
     @PutMapping("/update-profile")
     @Operation(summary = "Cập nhập mật khẩu")
-    AccountDetailEntity forgotPassword(@RequestBody AccountUpdateRequest accountUpdateRequest)  {
+    AccountDetail forgotPassword(@RequestBody AccountUpdateRequest accountUpdateRequest)  {
         return accountService.updateProfile(accountUpdateRequest);
     }
 

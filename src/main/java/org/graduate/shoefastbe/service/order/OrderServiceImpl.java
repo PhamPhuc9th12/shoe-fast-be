@@ -40,57 +40,57 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDtoResponse createOrder(OrderDtoRequest orderDtoRequest) {
-        AccountEntity account = accountRepository.findById(orderDtoRequest.getAccountId()).orElseThrow(
+        Account account = accountRepository.findById(orderDtoRequest.getAccountId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        OrderStatusEntity orderStatusEntity = orderStatusRepository.findByName(OrderStatusEnum.WAIT_ACCEPT.getValue());
-        OrderEntity orderEntity = orderMapper.getOrderByRequest(orderDtoRequest);
-        orderEntity.setOrderStatusId(orderStatusEntity.getId());
-        orderEntity.setSeen(Boolean.FALSE);
-        orderEntity.setAccountId(account.getId());
-        orderEntity.setCreateDate(LocalDate.now());
-        orderEntity.setModifyDate(LocalDate.now());
+        OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.WAIT_ACCEPT.getValue());
+        Order order = orderMapper.getOrderByRequest(orderDtoRequest);
+        order.setOrderStatusId(orderStatus.getId());
+        order.setSeen(Boolean.FALSE);
+        order.setAccountId(account.getId());
+        order.setCreateDate(LocalDate.now());
+        order.setModifyDate(LocalDate.now());
 
         if (Objects.nonNull(orderDtoRequest.getCode()) && !orderDtoRequest.getCode().isEmpty()) {
-            VoucherEntity voucherEntity = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
-            voucherEntity.setCount(voucherEntity.getCount() - 1);
-            voucherRepository.save(voucherEntity);
-            orderEntity.setVoucherId(voucherEntity.getId());
+            Voucher voucher = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
+            voucher.setCount(voucher.getCount() - 1);
+            voucherRepository.save(voucher);
+            order.setVoucherId(voucher.getId());
         }
 
-        orderEntity.setEncodeUrl(null);
-        orderRepository.save(orderEntity);
+        order.setEncodeUrl(null);
+        orderRepository.save(order);
         //create orderDetail
-        createDetailOrder(orderDtoRequest, orderEntity);
+        createDetailOrder(orderDtoRequest, order);
         // send notification
         CompletableFuture.runAsync(() -> {
             try {
-                sendNotification(orderEntity);
+                sendNotification(order);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
 
-        return orderMapper.getResponseByEntity(orderEntity);
+        return orderMapper.getResponseByEntity(order);
     }
 
     @Override
     public OrderDtoResponse getOrderById(Long id) {
-        OrderEntity orderEntity = orderRepository.findById(id).orElseThrow(
+        Order order = orderRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        return orderMapper.getResponseByEntity(orderEntity);
+        return orderMapper.getResponseByEntity(order);
     }
 
     @Override
     public List<OrderDetailResponse> getOrderDetail(Long orderId) {
-        List<OrderDetailEntity> orderDetailEntities = orderDetailRepository.findAllByOrderId(orderId);
-        List<AttributeEntity> attributeEntities = attributeRepository.findAllByIdIn(orderDetailEntities
+        List<OrderDetail> orderDetailEntities = orderDetailRepository.findAllByOrderId(orderId);
+        List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(orderDetailEntities
                 .stream()
-                .map(OrderDetailEntity::getAttributeId)
+                .map(OrderDetail::getAttributeId)
                 .collect(Collectors.toList()));
-        Map<Long, AttributeEntity> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
-                AttributeEntity::getId, Function.identity()
+        Map<Long, Attribute> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
+                Attribute::getId, Function.identity()
         ));
         return orderDetailEntities.stream().map(
                 orderDetailEntity -> OrderDetailResponse
@@ -107,7 +107,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderStatusEntity> getAllOrderStatus() {
+    public List<OrderStatus> getAllOrderStatus() {
         return orderStatusRepository.findAll();
     }
 
@@ -118,9 +118,9 @@ public class OrderServiceImpl implements OrderService {
 //        );
         if (orderStatusId == 0) {
             Page<OrderDtoResponse> orderEntities = orderRepository.findAllByAccountId(accountId, pageable).map(orderMapper::getResponseByEntity);
-            List<OrderStatusEntity> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
-            Map<Long, OrderStatusEntity> orderStatusEntityMap = orderStatusEntities.stream()
-                    .collect(Collectors.toMap(OrderStatusEntity::getId, Function.identity()));
+            List<OrderStatus> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
+            Map<Long, OrderStatus> orderStatusEntityMap = orderStatusEntities.stream()
+                    .collect(Collectors.toMap(OrderStatus::getId, Function.identity()));
             return orderEntities.map(
                     orderDtoResponse -> {
                         orderDtoResponse.setOrderStatusName(orderStatusEntityMap.get(orderDtoResponse.getOrderStatusId()).getName());
@@ -129,11 +129,11 @@ public class OrderServiceImpl implements OrderService {
             );
 
         }
-        Page<OrderEntity> orderEntityList = orderRepository.findAllByAccountIdAndOrderStatusId(accountId, orderStatusId, pageable);
+        Page<Order> orderEntityList = orderRepository.findAllByAccountIdAndOrderStatusId(accountId, orderStatusId, pageable);
         Page<OrderDtoResponse> orderEntities = orderEntityList.map(orderMapper::getResponseByEntity);
-        List<OrderStatusEntity> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
-        Map<Long, OrderStatusEntity> orderStatusEntityMap = orderStatusEntities.stream()
-                .collect(Collectors.toMap(OrderStatusEntity::getId, Function.identity()));
+        List<OrderStatus> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
+        Map<Long, OrderStatus> orderStatusEntityMap = orderStatusEntities.stream()
+                .collect(Collectors.toMap(OrderStatus::getId, Function.identity()));
         return orderEntities.map(
                 orderDtoResponse -> {
                     orderDtoResponse.setOrderStatusName(orderStatusEntityMap.get(orderDtoResponse.getOrderStatusId()).getName());
@@ -145,10 +145,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDtoResponse getCancelOrder(CancelOrderRequest cancelOrderRequest) {
-        OrderEntity order = orderRepository.findById(cancelOrderRequest.getId()).orElseThrow(
+        Order order = orderRepository.findById(cancelOrderRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        OrderStatusEntity orderStatus = orderStatusRepository.findById(order.getOrderStatusId()).orElseThrow(
+        OrderStatus orderStatus = orderStatusRepository.findById(order.getOrderStatusId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
@@ -158,14 +158,14 @@ public class OrderServiceImpl implements OrderService {
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
             throw new RuntimeException("Đơn hàng đã được giao thành công.");
         }
-        OrderStatusEntity orderStatusCancel = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
+        OrderStatus orderStatusCancel = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
         order.setOrderStatusId(orderStatusCancel.getId());
         order.setDescription(cancelOrderRequest.getDescription());
         order = orderRepository.save(order);
 
-        Collection<OrderDetailEntity> orderDetails = orderDetailRepository.findAllByOrderId(order.getId());
-        for (OrderDetailEntity orderDetail : orderDetails) {
-            AttributeEntity attribute = attributeRepository.findById(orderDetail.getAttributeId()).orElseThrow(
+        Collection<OrderDetail> orderDetails = orderDetailRepository.findAllByOrderId(order.getId());
+        for (OrderDetail orderDetail : orderDetails) {
+            Attribute attribute = attributeRepository.findById(orderDetail.getAttributeId()).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
             attribute.setStock(attribute.getStock() + orderDetail.getQuantity());
@@ -173,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
             attributeRepository.save(attribute);
         }
         if (Objects.nonNull(order.getVoucherId())) {
-            VoucherEntity voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
+            Voucher voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
             if (voucher != null) {
@@ -182,7 +182,7 @@ public class OrderServiceImpl implements OrderService {
                 voucherRepository.save(voucher);
             }
         }
-        NotificationEntity notification = NotificationEntity.builder()
+        Notification notification = Notification.builder()
                 .read(Boolean.FALSE)
                 .deliver(Boolean.FALSE)
                 .type(2L)
@@ -195,12 +195,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<CountResponse> getCountOrderByStatus() {
-        List<OrderEntity> orderEntityList = orderRepository.findAll();
-        Map<Long, List<OrderEntity>> orderMap = orderEntityList.stream().collect(Collectors.groupingBy(
-                OrderEntity::getOrderStatusId, Collectors.mapping(Function.identity(), Collectors.toList())
+        List<Order> orderList = orderRepository.findAll();
+        Map<Long, List<Order>> orderMap = orderList.stream().collect(Collectors.groupingBy(
+                Order::getOrderStatusId, Collectors.mapping(Function.identity(), Collectors.toList())
         ));
-        Map<Long, OrderStatusEntity> statusEntityMap = orderStatusRepository.findAllByIdIn(orderEntityList.stream().map(OrderEntity::getOrderStatusId).collect(Collectors.toList()))
-                .stream().collect(Collectors.toMap(OrderStatusEntity::getId, Function.identity()));
+        Map<Long, OrderStatus> statusEntityMap = orderStatusRepository.findAllByIdIn(orderList.stream().map(Order::getOrderStatusId).collect(Collectors.toList()))
+                .stream().collect(Collectors.toMap(OrderStatus::getId, Function.identity()));
         List<CountResponse> countResponses = new ArrayList<>();
         orderMap.forEach(
                 (statusId, orderEntities) -> {
@@ -222,19 +222,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<YearSynthesis> getReportYear() {
         List<YearSynthesis> yearSyntheses = new ArrayList<>();
-        List<OrderEntity> orderEntities = orderRepository.findAll();
-        OrderStatusEntity orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
-        Map<Integer, List<OrderEntity>> yearOrderEntities = orderEntities.stream()
+        List<Order> orderEntities = orderRepository.findAll();
+        OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
+        Map<Integer, List<Order>> yearOrderEntities = orderEntities.stream()
                 .collect(Collectors.groupingBy(
-                        orderEntity -> orderEntity.getCreateDate().getYear() // Lấy năm từ createDate và nhóm theo năm
+                        order -> order.getCreateDate().getYear() // Lấy năm từ createDate và nhóm theo năm
                 ));
         yearOrderEntities.forEach(
                 (year, orderList) -> {
-                    List<OrderEntity> countOrderEntities = orderList.stream().filter(
-                            orderEntity -> orderStatus.getId().equals(orderEntity.getOrderStatusId())
+                    List<Order> countOrderEntities = orderList.stream().filter(
+                            order -> orderStatus.getId().equals(order.getOrderStatusId())
                     ).collect(Collectors.toList());
                     Double total = 0d;
-                    for(OrderEntity order: countOrderEntities){
+                    for(Order order: countOrderEntities){
                         total += order.getTotal();
                     }
                     YearSynthesis synthesis = YearSynthesis.builder()
@@ -250,34 +250,34 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<ProductReport> getReportByProduct(Pageable pageable) {
-        OrderStatusEntity orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
-        List<OrderEntity> orderEntities = orderRepository.findAllByOrderStatusId(orderStatus.getId());
-        List<OrderDetailEntity> orderDetailEntities = orderDetailRepository.findAllByOrderIdIn(orderEntities.stream()
-                .map(OrderEntity::getId).collect(Collectors.toList()));
-        Map<Long, List<OrderDetailEntity>> orderAttributeMap = orderDetailEntities.stream().collect(Collectors.groupingBy(
-                OrderDetailEntity::getAttributeId, Collectors.mapping(Function.identity(), Collectors.toList())
+        OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
+        List<Order> orderEntities = orderRepository.findAllByOrderStatusId(orderStatus.getId());
+        List<OrderDetail> orderDetailEntities = orderDetailRepository.findAllByOrderIdIn(orderEntities.stream()
+                .map(Order::getId).collect(Collectors.toList()));
+        Map<Long, List<OrderDetail>> orderAttributeMap = orderDetailEntities.stream().collect(Collectors.groupingBy(
+                OrderDetail::getAttributeId, Collectors.mapping(Function.identity(), Collectors.toList())
         ));
 
-        List<AttributeEntity> attributeEntities = attributeRepository.findAllByIdIn(orderDetailEntities.stream()
-                .map(OrderDetailEntity::getAttributeId).collect(Collectors.toSet()));
-        Map<Long, List<AttributeEntity>> productAttributeMap = attributeEntities.stream().collect(Collectors.groupingBy(
-                AttributeEntity::getProductId, Collectors.mapping(Function.identity(), Collectors.toList())
+        List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(orderDetailEntities.stream()
+                .map(OrderDetail::getAttributeId).collect(Collectors.toSet()));
+        Map<Long, List<Attribute>> productAttributeMap = attributeEntities.stream().collect(Collectors.groupingBy(
+                Attribute::getProductId, Collectors.mapping(Function.identity(), Collectors.toList())
         ));
-        List<ProductEntity> productEntities = productRepository.findAllByIdIn(attributeEntities.stream().map(AttributeEntity::getProductId)
+        List<Product> productEntities = productRepository.findAllByIdIn(attributeEntities.stream().map(Attribute::getProductId)
                 .collect(Collectors.toSet()));
         List<ProductReport> productReports = new ArrayList<>();
-        for(ProductEntity product : productEntities){
-            List<AttributeEntity> attributeList = productAttributeMap.get(product.getId());
+        for(Product product : productEntities){
+            List<Attribute> attributeList = productAttributeMap.get(product.getId());
             double totalAmount = 0d;
             long orderCount = 0L;
             long quantityProduct = 0L;
-            for(AttributeEntity attribute : attributeList){
-                List<OrderDetailEntity> orderDetailEntityList = orderAttributeMap.get(attribute.getId());
-                for(OrderDetailEntity orderDetail : orderDetailEntityList){
+            for(Attribute attribute : attributeList){
+                List<OrderDetail> orderDetailList = orderAttributeMap.get(attribute.getId());
+                for(OrderDetail orderDetail : orderDetailList){
                     totalAmount += orderDetail.getQuantity() * orderDetail.getSellPrice();
                     quantityProduct += orderDetail.getQuantity();
                 }
-                orderCount = orderDetailEntityList.stream().map(OrderDetailEntity::getOrderId).collect(Collectors.toSet()).size();
+                orderCount = orderDetailList.stream().map(OrderDetail::getOrderId).collect(Collectors.toSet()).size();
             }
             ProductReport productReport = ProductReport.builder()
                     .amount(totalAmount)
@@ -290,47 +290,47 @@ public class OrderServiceImpl implements OrderService {
         return new PageImpl<>(productReports, pageable, productReports.size());
     }
 
-    private void createDetailOrder(OrderDtoRequest orderDtoRequest, OrderEntity orderEntity) {
-        List<AttributeEntity> attributeEntities = attributeRepository.findAllByIdIn(
-                orderDtoRequest.getOrderDetails().stream().map(OrderDetailEntity::getAttributeId).collect(Collectors.toSet())
+    private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {
+        List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
+                orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
         );
-        Map<Long, AttributeEntity> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
-                AttributeEntity::getId, Function.identity()
+        Map<Long, Attribute> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
+                Attribute::getId, Function.identity()
         ));
 
-        for (OrderDetailEntity orderDetail : orderDtoRequest.getOrderDetails()) {
-            AttributeEntity attribute = attributeEntityMap.get(orderDetail.getAttributeId());
+        for (OrderDetail orderDetail : orderDtoRequest.getOrderDetails()) {
+            Attribute attribute = attributeEntityMap.get(orderDetail.getAttributeId());
             if (attribute.getStock() < orderDetail.getQuantity()) {
                 throw new RuntimeException(CodeAndMessage.ERR5);
             } else {
                 attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
                 attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
                 attributeRepository.save(attribute);
-                orderDetail.setOrderId(orderEntity.getId());
+                orderDetail.setOrderId(order.getId());
                 orderDetailRepository.save(orderDetail);
                 if (Objects.nonNull(orderDtoRequest.getAccountId())) {
-                    CartItemEntity cartItemEntity = cartItemRepository
+                    CartItem cartItem = cartItemRepository
                             .findCartItemByAccountIdAndAttributeId(orderDtoRequest.getAccountId(), orderDetail.getAttributeId());
-                    cartItemEntity.setQuantity(0L);
-                    cartItemEntity.setIsActive(Boolean.FALSE);
-                    cartItemRepository.save(cartItemEntity);
+                    cartItem.setQuantity(0L);
+                    cartItem.setIsActive(Boolean.FALSE);
+                    cartItemRepository.save(cartItem);
                 }
             }
         }
     }
 
-    private void sendNotification(OrderEntity orderEntity) {
-        NotificationEntity notificationEntity = NotificationEntity
+    private void sendNotification(Order order) {
+        Notification notification = Notification
                 .builder()
                 .type(1L)
-                .orderId(orderEntity.getId())
-                .content(String.format("Đơn hàng số %s vừa được tạo, xác nhận ngay nào", orderEntity.getId()))
+                .orderId(order.getId())
+                .content(String.format("Đơn hàng số %s vừa được tạo, xác nhận ngay nào", order.getId()))
                 .deliver(Boolean.FALSE)
                 .read(Boolean.FALSE)
                 .build();
-        notificationRepository.save(notificationEntity);
+        notificationRepository.save(notification);
         try {
-            MailUtil.sendEmailOrder(orderEntity);
+            MailUtil.sendEmailOrder(order);
         } catch (MessagingException e) {
             System.out.println("Can't send an email.");
         }

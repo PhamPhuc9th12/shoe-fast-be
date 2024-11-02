@@ -1,11 +1,8 @@
 package org.graduate.shoefastbe.dto.order;
 
 import lombok.*;
-import org.graduate.shoefastbe.entity.OrderDetailEntity;
+import org.graduate.shoefastbe.entity.OrderDetail;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
 @AllArgsConstructor
@@ -22,7 +19,7 @@ public class OrderDtoRequest {
     private String email;
     private Boolean isPending;
     private Long accountId;
-    private Collection<OrderDetailEntity> orderDetails;
+    private Collection<OrderDetail> orderDetails;
     private String code; // voucherCode
     private String payment;
 }

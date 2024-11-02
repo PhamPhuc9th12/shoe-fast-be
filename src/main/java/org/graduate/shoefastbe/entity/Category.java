@@ -11,15 +11,14 @@ import java.time.LocalDate;
 @Setter
 @Builder
 @Entity
-@Table(name = "brands")
-public class BrandsEntity {
+@Table(name = "categories")
+public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
     private String description;
-    private String image;
-    private Boolean isActive;
     private LocalDate createDate;
     private LocalDate modifyDate;
+    private Boolean isActive;
 }

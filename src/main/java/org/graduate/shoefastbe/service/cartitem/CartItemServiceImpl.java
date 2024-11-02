@@ -1,7 +1,6 @@
 package org.graduate.shoefastbe.service.cartitem;
 
 import lombok.AllArgsConstructor;
-import org.aspectj.apache.bcel.classfile.Code;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessHandle;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
@@ -35,21 +34,21 @@ public class CartItemServiceImpl implements CartItemService{
     @Override
     @Transactional
     public CartItemDtoResponse modifyCartItem(CartItemDtoRequest cartItemDtoRequest) {
-        AttributeEntity attributeEntity = attributeRepository.findById(cartItemDtoRequest.getAttributeId()).orElseThrow(
+        Attribute attribute = attributeRepository.findById(cartItemDtoRequest.getAttributeId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        AccountEntity account = accountRepository.findById(cartItemDtoRequest.getAccountId()).orElseThrow(
+        Account account = accountRepository.findById(cartItemDtoRequest.getAccountId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        CartItemEntity cartItem = cartItemRepository.findCartItemByAccountIdAndAttributeId(cartItemDtoRequest.getAccountId(),
+        CartItem cartItem = cartItemRepository.findCartItemByAccountIdAndAttributeId(cartItemDtoRequest.getAccountId(),
                 cartItemDtoRequest.getAttributeId());
         if(Objects.isNull(cartItem)){
-            if(cartItemDtoRequest.getQuantity() > attributeEntity.getStock()){
+            if(cartItemDtoRequest.getQuantity() > attribute.getStock()){
                 throw new RuntimeException(CodeAndMessage.ERR5);
             }else{
-                CartItemEntity cartItemEntity = CartItemEntity.builder()
+                CartItem cartItemEntity = CartItem.builder()
                         .accountId(account.getId())
-                        .attributeId(attributeEntity.getId())
+                        .attributeId(attribute.getId())
                         .quantity(cartItemDtoRequest.getQuantity())
                         .lastPrice(cartItemDtoRequest.getLastPrice())
                         .isActive(Boolean.TRUE)
@@ -64,7 +63,7 @@ public class CartItemServiceImpl implements CartItemService{
                 cartItem.setIsActive(Boolean.FALSE);
                 cartItemRepository.save(cartItem);
                 return cartItemMapper.getResponseFrom(cartItem);
-            }else if(flag > attributeEntity.getStock()){
+            }else if(flag > attribute.getStock()){
                 throw new RuntimeException(CodeAndMessage.ERR5);
             }else{
                 cartItem.setQuantity(flag);
@@ -77,7 +76,7 @@ public class CartItemServiceImpl implements CartItemService{
 
     @Override
     public Boolean isEnoughStock(Long id, Long quantity) {
-        AttributeEntity attribute = attributeRepository.findById(id).orElseThrow(
+        Attribute attribute = attributeRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if(attribute.getStock() < quantity){
@@ -88,31 +87,31 @@ public class CartItemServiceImpl implements CartItemService{
 
     @Override
     public List<CartItemDetailResponse> getCartItemDetailByAccount(Long id) {
-        List<CartItemEntity> cartItemEntities = cartItemRepository.findByAccountIdAndIsActive(id,Boolean.TRUE);
-        Map<Long, AttributeEntity> attributeMap = attributeRepository.findAllByIdIn(cartItemEntities
+        List<CartItem> cartItemEntities = cartItemRepository.findByAccountIdAndIsActive(id,Boolean.TRUE);
+        Map<Long, Attribute> attributeMap = attributeRepository.findAllByIdIn(cartItemEntities
                 .stream()
-                .map(CartItemEntity::getAttributeId)
+                .map(CartItem::getAttributeId)
                 .collect(Collectors.toSet()))
                 .stream().collect(Collectors.toMap(
-                        AttributeEntity::getId, Function.identity()
+                        Attribute::getId, Function.identity()
                 ));
 
-        Set<Long> productIds = attributeMap.values().stream().map(AttributeEntity::getProductId).collect(Collectors.toSet());
-        List<ProductEntity> productEntities = productRepository.findAllByIdIn(productIds);
+        Set<Long> productIds = attributeMap.values().stream().map(Attribute::getProductId).collect(Collectors.toSet());
+        List<Product> productEntities = productRepository.findAllByIdIn(productIds);
         Map<Long, Long> productSaleMap = productEntities.stream().collect(Collectors.toMap(
-                ProductEntity::getId, ProductEntity::getSaleId
+                Product::getId, Product::getSaleId
         ));
-        Map<Long, SalesEntity> salesEntityMap = salesRepository.findAllByIdIn(productEntities
+        Map<Long, Sales> salesEntityMap = salesRepository.findAllByIdIn(productEntities
                 .stream()
-                .map(ProductEntity::getSaleId)
+                .map(Product::getSaleId)
                 .collect(Collectors.toSet()))
                 .stream().collect(Collectors.toMap(
-                        SalesEntity::getId,Function.identity()
+                        Sales::getId,Function.identity()
                 ));
 
         return cartItemEntities.stream().map(
-                cartItemEntity -> {
-                    AttributeEntity attribute = attributeMap.get(cartItemEntity.getAttributeId());
+                cartItem -> {
+                    Attribute attribute = attributeMap.get(cartItem.getAttributeId());
                     return CartItemDetailResponse
                             .builder()
                             .id(attribute.getId())
@@ -122,8 +121,8 @@ public class CartItemServiceImpl implements CartItemService{
                             .name(attribute.getName())
                             .image(Common.DEFAULT_IMAGE)
                             .discount(salesEntityMap.get(productSaleMap.get(attribute.getProductId())).getDiscount())
-                            .quantity(cartItemEntity.getQuantity())
-                            .lastPrice(cartItemEntity.getLastPrice())
+                            .quantity(cartItem.getQuantity())
+                            .lastPrice(cartItem.getLastPrice())
                             .build();
                 }
         ).collect(Collectors.toList());
@@ -132,7 +131,7 @@ public class CartItemServiceImpl implements CartItemService{
     @Override
     @Transactional
     public SuccessResponse removeCartItem(CartItemDtoRequest cartItemDtoRequest) {
-        CartItemEntity cartItem = cartItemRepository.findCartItemByAccountIdAndAttributeId(cartItemDtoRequest.getAccountId(),
+        CartItem cartItem = cartItemRepository.findCartItemByAccountIdAndAttributeId(cartItemDtoRequest.getAccountId(),
                 cartItemDtoRequest.getAttributeId());
         if(cartItem == null){
             throw new RuntimeException(CodeAndMessage.ERR3);

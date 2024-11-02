@@ -11,15 +11,15 @@ import java.time.LocalDate;
 @Setter
 @Builder
 @Entity
-@Table(name = "sales")
-public class SalesEntity {
+@Table(name = "images")
+public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    private String description;
-    private Long discount;
+    private String imageLink;
     private Boolean isActive;
+    private String name;
+    private Long productId;
+    private LocalDate crateDate;
     private LocalDate modifyDate;
-    private LocalDate createDate;
 }

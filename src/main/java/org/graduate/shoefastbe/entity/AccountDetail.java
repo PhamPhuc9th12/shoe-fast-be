@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Builder
 @Entity
 @Table(name = "account_detail")
-public class AccountDetailEntity {
+public class AccountDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

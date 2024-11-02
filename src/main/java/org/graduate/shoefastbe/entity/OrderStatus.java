@@ -9,17 +9,15 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
-@Builder
 @Entity
-@Table(name = "vouchers")
-public class VoucherEntity {
+@Builder
+@Table(name = "order_status")
+public class OrderStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String code;
-    private Long count;
-    private Long discount;
+    private String description;
+    private String name;
     private LocalDate createDate;
-    private LocalDate expireDate;
-    private Boolean isActive;
+    private LocalDate updateDate;
 }

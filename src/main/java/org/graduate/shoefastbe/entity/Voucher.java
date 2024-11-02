@@ -11,18 +11,15 @@ import java.time.LocalDate;
 @Setter
 @Builder
 @Entity
-@Table(name = "products")
-public class ProductEntity {
+@Table(name = "vouchers")
+public class Voucher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String code;
-    private String description;
-    private String name;
-    private Long view;
-    private Long brandId;
-    private Long saleId;
-    private Boolean isActive;
+    private Long count;
+    private Long discount;
     private LocalDate createDate;
-    private LocalDate modifyDate;
+    private LocalDate expireDate;
+    private Boolean isActive;
 }
