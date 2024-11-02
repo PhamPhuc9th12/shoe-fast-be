@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.category;
 
 import lombok.AllArgsConstructor;
+import org.graduate.shoefastbe.dto.category.CategoryRequest;
 import org.graduate.shoefastbe.dto.category.CategoryResponse;
 import org.graduate.shoefastbe.entity.CategoryEntity;
 import org.graduate.shoefastbe.mapper.CategoryMapper;
@@ -18,5 +19,12 @@ public class CategoryServiceImpl implements CategoryService {
     public Page<CategoryResponse> getAllCategory(Pageable pageable) {
         Page<CategoryEntity> entities = categoryRepository.findAll(pageable);
         return entities.map(categoryMapper::getResponseBy);
+    }
+
+    @Override
+    public CategoryResponse create(CategoryRequest categoryRequest) {
+        CategoryEntity category = categoryMapper.getEntityBy(categoryRequest);
+        categoryRepository.save(category);
+        return categoryMapper.getResponseBy(category);
     }
 }
