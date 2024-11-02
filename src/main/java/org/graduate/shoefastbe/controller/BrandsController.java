@@ -24,4 +24,12 @@ public class BrandsController {
     BrandResponse create(@RequestBody BrandRequest brandRequest){
         return brandService.create(brandRequest);
     }
+    @GetMapping("/detail")
+    BrandResponse getBrandDetail(@RequestParam Long id){
+        return brandService.getDetail(id);
+    }
+    @PutMapping("/update")
+    BrandResponse update(@RequestBody BrandRequest brandRequest){
+        return brandService.update(brandRequest);
+    }
 }

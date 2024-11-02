@@ -8,4 +8,6 @@ import org.springframework.data.domain.Pageable;
 public interface BrandService {
     Page<BrandResponse> getAllBrand(Pageable pageable);
     BrandResponse create(BrandRequest brandRequest);
+    BrandResponse getDetail(Long id);
+    BrandResponse update(BrandRequest brandRequest);
 }
