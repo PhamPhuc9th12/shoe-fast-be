@@ -16,6 +16,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByBrandIdIn(Collection<Long> brandIds);
     List<Product> findAllByIdIn(Collection<Long> productIds);
     Product findByCode(String code);
+    List<Product> findAllBySaleId(Long saleId);
 
     Page<Product> findAllByBrandIdAndIsActive(Long productId, Boolean isActive, Pageable pageable);
     @Query("SELECT p FROM Product p" +

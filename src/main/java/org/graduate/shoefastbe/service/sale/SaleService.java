@@ -9,4 +9,5 @@ public interface SaleService {
     Page<SaleResponse> getAllSale(Pageable pageable);
     SaleResponse create(SaleResponse saleResponse);
     SaleResponse getDetailSale(Long id);
+    SaleResponse update(SaleResponse saleResponse);
 }
