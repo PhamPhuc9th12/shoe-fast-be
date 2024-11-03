@@ -14,7 +14,7 @@ public interface OrderService {
     List<OrderDetailResponse> getOrderDetail(Long orderId);
     List<OrderStatus> getAllOrderStatus();
     Page<OrderDtoResponse> getAllOrders (Long accountId, Long orderStatusId, Pageable pageable);
-    OrderDtoResponse getCancelOrder(CancelOrderRequest cancelOrderRequest);
+    OrderDtoResponse cancelOrder(CancelOrderRequest cancelOrderRequest);
 
 
     //admin

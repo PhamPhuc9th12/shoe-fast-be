@@ -44,7 +44,7 @@ public class OrderController {
     }
     @GetMapping("/list")
     @Operation(summary = "Lấy danh sách đơn hàng")
-    Page<OrderDtoResponse> getAllOrderStatus(@RequestParam Long accountId,
+    Page<OrderDtoResponse> getAllOrder(@RequestParam Long accountId,
                                              @RequestParam Long orderStatusId,
                                              @ParameterObject Pageable pageable){
         return orderService.getAllOrders(accountId, orderStatusId, pageable);
@@ -52,7 +52,7 @@ public class OrderController {
     @PostMapping("/cancel")
     @Operation(summary = "Xóa đơn hàng")
     OrderDtoResponse cancelOrder(@RequestBody CancelOrderRequest cancelOrderRequest){
-        return orderService.getCancelOrder(cancelOrderRequest);
+        return orderService.cancelOrder(cancelOrderRequest);
     }
 
     // admin

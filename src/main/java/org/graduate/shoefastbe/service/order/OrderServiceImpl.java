@@ -36,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final NotificationRepository notificationRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final ImageRepository imageRepository;
 
     @Override
     @Transactional
@@ -113,9 +114,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderDtoResponse> getAllOrders(Long accountId, Long orderStatusId, Pageable pageable) {
-//        OrderStatusEntity orderStatus = orderStatusRepository.findById(orderStatusId).orElseThrow(
-//                () -> new RuntimeException(CodeAndMessage.ERR3)
-//        );
         if (orderStatusId == 0) {
             Page<OrderDtoResponse> orderEntities = orderRepository.findAllByAccountId(accountId, pageable).map(orderMapper::getResponseByEntity);
             List<OrderStatus> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
@@ -144,7 +142,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDtoResponse getCancelOrder(CancelOrderRequest cancelOrderRequest) {
+    public OrderDtoResponse cancelOrder(CancelOrderRequest cancelOrderRequest) {
         Order order = orderRepository.findById(cancelOrderRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );

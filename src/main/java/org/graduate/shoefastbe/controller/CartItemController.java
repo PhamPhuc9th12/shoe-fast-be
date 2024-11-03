@@ -26,7 +26,7 @@ public class CartItemController {
 
     @GetMapping("/check-stock")
     @Operation(summary = "Kiểm tra số lượng tồn kho")
-    Boolean modifyCartItem(@RequestParam Long id, @RequestParam Long quantity){
+    Boolean checkStock(@RequestParam Long id, @RequestParam Long quantity){
         return cartItemService.isEnoughStock(id, quantity);
     }
     @GetMapping("/by-account")

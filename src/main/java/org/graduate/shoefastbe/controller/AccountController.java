@@ -46,7 +46,7 @@ public class AccountController {
         return accountService.forgotPassword(forgotPassRequest);
     }
     @PutMapping("/update-profile")
-    @Operation(summary = "Cập nhập mật khẩu")
+    @Operation(summary = "Cập nhập thong tin")
     AccountDetail forgotPassword(@RequestBody AccountUpdateRequest accountUpdateRequest)  {
         return accountService.updateProfile(accountUpdateRequest);
     }
