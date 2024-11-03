@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.sale;
 
 import lombok.AllArgsConstructor;
+import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.dto.sale.SaleResponse;
 import org.graduate.shoefastbe.entity.Sales;
 import org.graduate.shoefastbe.mapper.SaleMapper;
@@ -25,6 +26,14 @@ public class SaleServiceImpl implements SaleService{
     public SaleResponse create(SaleResponse saleResponse) {
         Sales sales = saleMapper.getEntityBy(saleResponse);
         salesRepository.save(sales);
+        return saleMapper.getResponseBy(sales);
+    }
+
+    @Override
+    public SaleResponse getDetailSale(Long id) {
+        Sales sales = salesRepository.findById(id).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
         return saleMapper.getResponseBy(sales);
     }
 

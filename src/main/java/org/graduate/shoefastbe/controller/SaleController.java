@@ -22,4 +22,8 @@ public class SaleController {
     SaleResponse create(@RequestBody SaleResponse saleResponse){
         return saleService.create(saleResponse);
     }
+    @GetMapping("/detail")
+    SaleResponse getDetailSale(@RequestParam Long id){
+        return saleService.getDetailSale(id);
+    }
 }
