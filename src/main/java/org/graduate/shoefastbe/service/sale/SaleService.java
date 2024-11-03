@@ -7,4 +7,5 @@ import org.springframework.data.domain.Pageable;
 public interface SaleService {
 
     Page<SaleResponse> getAllSale(Pageable pageable);
+    SaleResponse create(SaleResponse saleResponse);
 }

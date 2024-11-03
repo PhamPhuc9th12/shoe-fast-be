@@ -7,4 +7,5 @@ import org.mapstruct.Mapper;
 @Mapper
 public interface SaleMapper {
     SaleResponse getResponseBy(Sales sales);
+    Sales getEntityBy(SaleResponse saleResponse);
 }

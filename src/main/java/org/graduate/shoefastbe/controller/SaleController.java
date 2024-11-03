@@ -6,9 +6,7 @@ import org.graduate.shoefastbe.service.sale.SaleService;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/sale")
@@ -19,5 +17,9 @@ public class SaleController {
     @GetMapping("/list")
     public Page<SaleResponse> getAllSale(@ParameterObject Pageable pageable){
         return saleService.getAllSale(pageable);
+    }
+    @PostMapping("/create")
+    SaleResponse create(@RequestBody SaleResponse saleResponse){
+        return saleService.create(saleResponse);
     }
 }

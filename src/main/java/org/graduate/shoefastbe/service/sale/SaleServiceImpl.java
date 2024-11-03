@@ -20,4 +20,12 @@ public class SaleServiceImpl implements SaleService{
         Page<Sales> entities = salesRepository.findAll(pageable);
         return entities.map(saleMapper::getResponseBy);
     }
+
+    @Override
+    public SaleResponse create(SaleResponse saleResponse) {
+        Sales sales = saleMapper.getEntityBy(saleResponse);
+        salesRepository.save(sales);
+        return saleMapper.getResponseBy(sales);
+    }
+
 }
