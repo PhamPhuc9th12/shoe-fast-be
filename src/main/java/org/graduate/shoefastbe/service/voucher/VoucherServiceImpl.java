@@ -8,6 +8,8 @@ import org.graduate.shoefastbe.dto.voucher.VoucherDtoResponse;
 import org.graduate.shoefastbe.entity.Voucher;
 import org.graduate.shoefastbe.mapper.VoucherMapper;
 import org.graduate.shoefastbe.repository.VoucherRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,4 +42,40 @@ public class VoucherServiceImpl implements VoucherService{
             throw new RuntimeException(CodeAndMessage.ERR3);
         }
     }
+
+    @Override
+    public Page<VoucherDtoResponse> getAllVoucher(Pageable pageable) {
+        Page<Voucher> vouchers =  voucherRepository.findAll(pageable);
+        return vouchers.map(voucherMapper::getResponseByEntity);
+    }
+
+    @Override
+    public VoucherDtoResponse create(Voucher voucher) {
+         Voucher voucher1 = voucherRepository.save(voucher);
+        return voucherMapper.getResponseByEntity(voucher1);
+    }
+
+    @Override
+    public VoucherDtoResponse getDetail(Long id) {
+        Voucher voucher = voucherRepository.findById(id).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        return voucherMapper.getResponseByEntity(voucher);
+    }
+
+    @Override
+    public VoucherDtoResponse update(Voucher voucher) {
+        Voucher vou = voucherRepository.findById(voucher.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        vou.setCode(voucher.getCode());
+        vou.setExpireDate(voucher.getExpireDate());
+        vou.setCreateDate(LocalDate.now());
+        vou.setDiscount(voucher.getDiscount());
+        vou.setCount(voucher.getCount());
+        vou.setIsActive(voucher.getIsActive());
+        voucherRepository.save(vou);
+        return voucherMapper.getResponseByEntity(vou);
+    }
+
 }
