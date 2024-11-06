@@ -22,5 +22,6 @@ public interface OrderService {
     Long countOrder();
     List<YearSynthesis> getReportYear();
     Page<ProductReport> getReportByProduct(Pageable pageable);
-
+    Page<OrderDtoResponse> getOrderByYearAndMonth(Long id,Long year, Long month, Pageable pageable);
+    Page<OrderDtoResponse> getOrderByProduct(Long id, Pageable pageable);
 }

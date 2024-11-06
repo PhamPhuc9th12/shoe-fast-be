@@ -288,6 +288,23 @@ public class OrderServiceImpl implements OrderService {
         return new PageImpl<>(productReports, pageable, productReports.size());
     }
 
+    @Override
+    public Page<OrderDtoResponse> getOrderByYearAndMonth(Long id, Long year, Long month, Pageable pageable) {
+        Page<Order> orders;
+        if(id == 0L){
+            orders = orderRepository.findOrderByYearAndMonth(year, month, pageable);
+        }else{
+            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id,year,month,pageable);
+        }
+        return orders.map(orderMapper::getResponseByEntity);
+    }
+
+    @Override
+    public Page<OrderDtoResponse> getOrderByProduct(Long id, Pageable pageable) {
+        Page<Order> orders = orderRepository.findOrderByProduct(id, pageable);
+        return orders.map(orderMapper::getResponseByEntity);
+    }
+
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {
         List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
                 orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())

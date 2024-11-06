@@ -76,5 +76,17 @@ public class OrderController {
     Page<ProductReport> getReportProduct(@ParameterObject Pageable pageable){
         return orderService.getReportByProduct(pageable);
     }
+    @GetMapping("/synthesis/order-by-year-month")
+    Page<OrderDtoResponse> getOrderByYearAndMonth(@RequestParam Long id,
+                                                  @RequestParam Long year,
+                                                  @RequestParam Long month,
+                                                  @ParameterObject Pageable pageable){
+        return orderService.getOrderByYearAndMonth(id, year, month, pageable);
+    }
+    @GetMapping("/synthesis/order-by-product")
+    Page<OrderDtoResponse> getOrderByProduct(@RequestParam Long id,
+                                             @ParameterObject Pageable pageable){
+        return orderService.getOrderByProduct(id, pageable);
+    }
 
 }
