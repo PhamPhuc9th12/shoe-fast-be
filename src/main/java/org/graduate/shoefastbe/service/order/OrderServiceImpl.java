@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.order;
 
 import lombok.AllArgsConstructor;
+import org.aspectj.apache.bcel.classfile.Code;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
 import org.graduate.shoefastbe.dto.order.*;
@@ -303,6 +304,77 @@ public class OrderServiceImpl implements OrderService {
     public Page<OrderDtoResponse> getOrderByProduct(Long id, Pageable pageable) {
         Page<Order> orders = orderRepository.findOrderByProduct(id, pageable);
         return orders.map(orderMapper::getResponseByEntity);
+    }
+
+    @Override
+    public List<MonthSynthesis> getReportByMonth(Long year) {
+        List<Order> orders = orderRepository.reportAmountMonth(year);
+        List<MonthSynthesis> monthSyntheses = new ArrayList<>();
+        for(Order order: orders){
+            MonthSynthesis monthSynthesis = MonthSynthesis.builder()
+                    .month((long) order.getCreateDate().getMonthValue())
+                    .count(order.getId())
+                    .total(order.getTotal())
+                    .build();
+            monthSyntheses.add(monthSynthesis);
+        }
+        return monthSyntheses;
+    }
+
+    @Override
+    public OrderDtoResponse update(OrderUpdateRequest orderUpdateRequest) {
+        Order order = orderRepository.findById(orderUpdateRequest.getOrderId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        order.setIsPending(orderUpdateRequest.getIsPending());
+        order.setAddress(orderUpdateRequest.getAddress());
+        order.setEmail(orderUpdateRequest.getEmail());
+        order.setFullName(orderUpdateRequest.getFullname());
+        order.setNote(orderUpdateRequest.getNote());
+        order.setPhone(orderUpdateRequest.getPhone());
+        order.setModifyDate(LocalDate.now());
+        orderRepository.save(order);
+        return orderMapper.getResponseByEntity(order);
+    }
+
+    @Override
+    public OrderDtoResponse cancelOrderAdmin(UpdateStatusOrderRequest orderUpdateRequest) {
+        Order order = orderRepository.findById(orderUpdateRequest.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        Long flag = order.getOrderStatusId();
+        OrderStatus orderStatus = orderStatusRepository.findById(flag).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
+            throw new RuntimeException("Giao Thành công");
+        } else if (orderStatus.getName().equals(OrderStatusEnum.CANCELED.getValue())) {
+            throw new RuntimeException("Da Hủy");
+        } else {
+            OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
+            order.setOrderStatusId(orderStt.getId());
+            order.setDescription(orderUpdateRequest.getDescription());
+            order.setModifyDate(LocalDate.now());
+            List<OrderDetail> list = orderDetailRepository.findAllByOrderId(order.getId());
+            for (OrderDetail o : list) {
+                Attribute attribute = attributeRepository.findById(o.getAttributeId()).orElseThrow(
+                        () -> new RuntimeException(CodeAndMessage.ERR3)
+                );
+                attribute.setCache(attribute.getCache() - o.getQuantity());
+                attribute.setStock(attribute.getStock() + o.getQuantity());
+                attributeRepository.save(attribute);
+            }
+            Voucher voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
+                    () -> new RuntimeException(CodeAndMessage.ERR3)
+            );
+            if(voucher != null){
+                voucher.setCount(1L);
+                voucher.setIsActive(Boolean.TRUE);
+                voucherRepository.save(voucher);
+            }
+            orderRepository.save(order);
+            return orderMapper.getResponseByEntity(order);
+        }
     }
 
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {

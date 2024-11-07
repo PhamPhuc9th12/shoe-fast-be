@@ -88,5 +88,16 @@ public class OrderController {
                                              @ParameterObject Pageable pageable){
         return orderService.getOrderByProduct(id, pageable);
     }
-
+    @GetMapping("/synthesis/amount-month")
+    List<MonthSynthesis> getReportAmountMonth(@RequestParam Long year){
+        return orderService.getReportByMonth(year);
+    }
+    @PostMapping("/update")
+    OrderDtoResponse update(@RequestBody OrderUpdateRequest orderUpdateRequest){
+        return orderService.update(orderUpdateRequest);
+    }
+    @PostMapping("/admin/cancel-order")
+    OrderDtoResponse cancelOrderAdmin(@RequestBody UpdateStatusOrderRequest updateRequest){
+        return orderService.cancelOrderAdmin(updateRequest);
+    }
 }

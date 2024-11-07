@@ -24,4 +24,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o inner join OrderDetail d on o.id = d.orderId inner join Attribute a on a.id = d.attributeId inner join Product p on p.id = a.productId where p.id = :id and o.orderStatusId = 4")
     Page<Order> findOrderByProduct(@Param("id") Long id, Pageable pageable);
+    @Query("SELECT o FROM Order o WHERE o.orderStatusId = 4 AND YEAR(o.createDate) = :year GROUP BY MONTH(o.createDate) ORDER BY SUM (o.total) DESC")
+    List<Order> reportAmountMonth(@Param("year") Long year);
 }

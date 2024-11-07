@@ -24,4 +24,7 @@ public interface OrderService {
     Page<ProductReport> getReportByProduct(Pageable pageable);
     Page<OrderDtoResponse> getOrderByYearAndMonth(Long id,Long year, Long month, Pageable pageable);
     Page<OrderDtoResponse> getOrderByProduct(Long id, Pageable pageable);
+    List<MonthSynthesis> getReportByMonth(Long year);
+    OrderDtoResponse update(OrderUpdateRequest orderUpdateRequest);
+    OrderDtoResponse cancelOrderAdmin(UpdateStatusOrderRequest orderUpdateRequest);
 }
