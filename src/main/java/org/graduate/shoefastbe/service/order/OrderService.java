@@ -27,4 +27,5 @@ public interface OrderService {
     List<MonthSynthesis> getReportByMonth(Long year);
     OrderDtoResponse update(OrderUpdateRequest orderUpdateRequest);
     OrderDtoResponse cancelOrderAdmin(UpdateStatusOrderRequest orderUpdateRequest);
+    OrderDtoResponse updateProcess(UpdateStatusOrderRequest orderUpdateRequest);
 }

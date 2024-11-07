@@ -377,6 +377,31 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public OrderDtoResponse updateProcess(UpdateStatusOrderRequest orderUpdateRequest) {
+        Order order = orderRepository.findById(orderUpdateRequest.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        OrderStatus orderStatus = orderStatusRepository.findById(order.getOrderStatusId())
+                .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+
+        if (orderStatus.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
+            OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.IS_LOADING.getValue());
+            order.setOrderStatusId(orderStt.getId());
+            order.setModifyDate(LocalDate.now());
+            orderRepository.save(order);
+            return orderMapper.getResponseByEntity(order);
+        } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
+            throw new RuntimeException("ACCEPTED");
+        } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
+            throw new RuntimeException("IS_DELIVERY");
+        } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
+            throw new RuntimeException("SUCCESS");
+        } else {
+            throw new RuntimeException(("CANCEL"));
+        }
+    }
+
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {
         List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
                 orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())

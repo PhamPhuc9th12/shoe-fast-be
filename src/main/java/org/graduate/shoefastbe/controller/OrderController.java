@@ -100,4 +100,8 @@ public class OrderController {
     OrderDtoResponse cancelOrderAdmin(@RequestBody UpdateStatusOrderRequest updateRequest){
         return orderService.cancelOrderAdmin(updateRequest);
     }
+    @PostMapping("/admin/update-process")
+    OrderDtoResponse updateProcess(@RequestBody UpdateStatusOrderRequest updateRequest){
+        return orderService.updateProcess(updateRequest);
+    }
 }

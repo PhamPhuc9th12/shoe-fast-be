@@ -5,7 +5,8 @@ public enum OrderStatusEnum {
     IS_LOADING("Đang xử lí"),
     IS_DELIVERY("Đang vận chuyển"),
     DELIVERED("Đã giao"),
-    CANCELED("Đã hủy");
+    CANCELED("Đã hủy"),
+    ACCEPT("Đã xác nhận");
 
     private final String value;
     OrderStatusEnum(String value) {
