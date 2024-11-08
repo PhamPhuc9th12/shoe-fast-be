@@ -402,6 +402,118 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public OrderDtoResponse updateShipment(UpdateStatusOrderRequest updateStatusOrderRequest) {
+        Order order = orderRepository.findById(updateStatusOrderRequest.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        OrderStatus orderStatus = orderStatusRepository.findById(order.getOrderStatusId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+
+        if (orderStatus.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
+            throw new RuntimeException("WAIT_ACCEPT");
+        } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
+            OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.IS_DELIVERY.getValue());
+            order.setOrderStatusId(orderStt.getId());
+            order.setShipment(updateStatusOrderRequest.getShipment());
+            order.setCode(updateStatusOrderRequest.getCode());
+            order.setShipDate(updateStatusOrderRequest.getShipDate());
+            order.setModifyDate(LocalDate.now());
+            orderRepository.save(order);
+            return orderMapper.getResponseByEntity(order);
+        } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
+            throw new RuntimeException("IS_DELIVERY");
+        } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
+            throw new RuntimeException("SUCCESS");
+        } else {
+            throw new RuntimeException("CANCEL");
+        }
+    }
+
+    @Override
+    public OrderDtoResponse updateSuccess(UpdateStatusOrderRequest updateStatusOrderRequest) {
+        Order order = orderRepository.findById(updateStatusOrderRequest.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+
+        OrderStatus orderStt = orderStatusRepository.findById(order.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+
+        if (orderStt.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
+            throw new RuntimeException("WAIT");
+        } else if (orderStt.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
+            throw new RuntimeException("Đơn hàng cần xác nhận vận chuyển");
+        } else if (orderStt.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
+            OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
+            order.setOrderStatusId(orderStatus.getId());
+            order.setModifyDate(LocalDate.now());
+            order.setIsPending(true);
+            List<OrderDetail> list = orderDetailRepository.findAllByOrderId(order.getId());
+            for (OrderDetail o : list) {
+                Attribute attribute = attributeRepository.findById(o.getAttributeId()).orElseThrow(
+                        () -> new RuntimeException(CodeAndMessage.ERR3)
+                );
+                attribute.setCache(attribute.getCache() - o.getQuantity());
+                attributeRepository.save(attribute);
+            }
+            Voucher v = voucherRepository.findById(order.getVoucherId()).orElseThrow(
+                    () -> new RuntimeException(CodeAndMessage.ERR3)
+            );
+            if(v != null){
+                v.setIsActive(Boolean.FALSE);
+                voucherRepository.save(v);
+            }
+            if(order.getTotal() > 1000000){
+                Voucher voucher = new Voucher();
+                voucher.setCode(generateCode());
+                voucher.setIsActive(Boolean.TRUE);
+                voucher.setCreateDate(LocalDate.now());
+                voucher.setCount(1L);
+                voucher.setExpireDate(LocalDate.now().plusYears(1));
+                if (order.getTotal() >= 3000000) {
+                    voucher.setDiscount(30L);
+                } else if (order.getTotal() >= 2000000) {
+                    voucher.setDiscount(20L);
+                } else {
+                    voucher.setDiscount(10L);
+                }
+                voucher = voucherRepository.save(voucher);
+                try {
+                    MailUtil.sendEmail(voucher, order);
+                } catch (MessagingException e) {
+                    System.out.println("Can't send an email.");
+                }
+            }
+             orderRepository.save(order);
+            return orderMapper.getResponseByEntity(order);
+        } else if (orderStt.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
+            throw new RuntimeException("SUCCESS");
+        } else {
+            throw new RuntimeException("CANCEL");
+        }
+    }
+
+    @Override
+    public Page<OrderDtoResponse> getPage(Long id, Pageable pageable) {
+        OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        if (orderStatus == null) {
+            return orderRepository.findAll(pageable).map(orderMapper::getResponseByEntity);
+        }
+        return orderRepository.findAllByOrderStatusId(id, pageable).map(orderMapper::getResponseByEntity);
+    }
+
+    @Override
+    public Page<OrderDtoResponse> getOrderBetweenDate(Long id, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+        if (id.equals(0L)) {
+            return orderRepository.findOrderBetweenDate(fromDate, toDate, pageable).map(orderMapper::getResponseByEntity);
+        }
+        return orderRepository.findOrderByOrderStatusBetweenDate(id, fromDate, toDate, pageable).map(orderMapper::getResponseByEntity);
+    }
+
     private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {
         List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
                 orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
@@ -446,5 +558,17 @@ public class OrderServiceImpl implements OrderService {
         } catch (MessagingException e) {
             System.out.println("Can't send an email.");
         }
+    }
+    private String generateCode() {
+        int leftLimit = 48;
+        int rightLimit = 122;
+        int targetStringLength = 10;
+        Random random = new Random();
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
     }
 }

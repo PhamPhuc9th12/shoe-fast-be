@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -16,6 +17,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllByAccountIdAndOrderStatusId(Long accountId, Long orderStatusId, Pageable pageable);
 
     List<Order> findAllByOrderStatusId(Long orderStatusId);
+    Page<Order> findAllByOrderStatusId(Long orderStatusId, Pageable pageable);
 
     @Query("SELECT o FROM Order o WHERE year(o.createDate) = :year and month(o.createDate) = :month")
     Page<Order> findOrderByYearAndMonth(@Param("year") Long year, @Param("month") Long month, Pageable pageable);
@@ -26,4 +28,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findOrderByProduct(@Param("id") Long id, Pageable pageable);
     @Query("SELECT o FROM Order o WHERE o.orderStatusId = 4 AND YEAR(o.createDate) = :year GROUP BY MONTH(o.createDate) ORDER BY SUM (o.total) DESC")
     List<Order> reportAmountMonth(@Param("year") Long year);
+    @Query("SELECT o FROM Order o WHERE o.createDate between :from and :to")
+    Page<Order> findOrderBetweenDate(@Param("from") LocalDate from, @Param("to") LocalDate to, Pageable pageable);
+    @Query("SELECT o FROM Order o WHERE o.orderStatusId = :id and o.createDate between :from and :to")
+    Page<Order> findOrderByOrderStatusBetweenDate(@Param("id") Long id, @Param("from")LocalDate from, @Param("to") LocalDate to, Pageable pageable);
 }

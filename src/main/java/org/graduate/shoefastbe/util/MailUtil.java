@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.graduate.shoefastbe.entity.Order;
+import org.graduate.shoefastbe.entity.Voucher;
 
 import javax.mail.*;
 import javax.mail.internet.*;
@@ -42,6 +43,32 @@ public class MailUtil {
                 .append("Địa chỉ: " + order.getAddress()).append("<br/>")
                 .append("Theo dõi trạng thái đơn hàng tại đây: ")
                         .append("http://localhost:3000/order/detail/");
+        msg.setSubject("Cửa hàng giày ShoeFast thông báo");
+        msg.setContent(sb.toString(), "text/html; charset=utf-8");
+        msg.setSentDate(new Date());
+        Transport.send(msg);
+    }
+    public static void sendEmail(Voucher voucher, Order order) throws MessagingException {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(email, password);
+            }
+        });
+        Message msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress("tanvxph13005@fpt.edu.vn", false));
+
+        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(order.getEmail()));
+        StringBuilder sb = new StringBuilder()
+                .append("Bạn nhận được voucher giảm giá cho lần sử dụng tiếp theo: " + voucher.getCode()).append("<br/>")
+                .append("Số lần sử dụng: " + voucher.getCount()).append("<br/>")
+                .append("Hạn sử dụng: " + voucher.getExpireDate()).append("<br/>")
+                .append("Giảm giá: " + voucher.getDiscount() + " %").append("<br/>");
         msg.setSubject("Cửa hàng giày ShoeFast thông báo");
         msg.setContent(sb.toString(), "text/html; charset=utf-8");
         msg.setSentDate(new Date());

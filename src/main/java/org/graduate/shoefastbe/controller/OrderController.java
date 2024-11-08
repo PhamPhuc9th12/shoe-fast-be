@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @AllArgsConstructor
@@ -103,5 +105,28 @@ public class OrderController {
     @PostMapping("/admin/update-process")
     OrderDtoResponse updateProcess(@RequestBody UpdateStatusOrderRequest updateRequest){
         return orderService.updateProcess(updateRequest);
+    }
+    @PostMapping("/admin/update-shipment")
+    OrderDtoResponse updateShipment(@RequestBody UpdateStatusOrderRequest updateStatusOrderRequest){
+        return orderService.updateShipment(updateStatusOrderRequest);
+    }
+
+    @PostMapping("/admin/update-success")
+    OrderDtoResponse updateSuccess(@RequestBody UpdateStatusOrderRequest updateStatusOrderRequest){
+        return orderService.updateSuccess(updateStatusOrderRequest);
+    }
+    @GetMapping("/page-admin")
+    Page<OrderDtoResponse> getPage(@RequestParam Long id, @ParameterObject Pageable pageable){
+        return orderService.getPage(id, pageable);
+    }
+    @GetMapping("/admin/page-orders-between-date")
+    Page<OrderDtoResponse> getOrderBetweenDate(@RequestParam Long id,
+                                               @RequestParam String from,
+                                               @RequestParam String to,
+                                               @ParameterObject Pageable pageable){
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        LocalDate fromDate = LocalDate.parse(from, dtf);
+        LocalDate toDate = LocalDate.parse(to, dtf);
+        return orderService.getOrderBetweenDate(id, fromDate, toDate, pageable);
     }
 }
