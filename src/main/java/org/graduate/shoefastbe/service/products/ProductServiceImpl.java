@@ -148,8 +148,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable) {
-        Page<Product> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,pageable);
-        return getProductDtoResponses(productEntities);
+        if(brandId == 0){
+             return getAllProduct(pageable);
+        }else{
+            Page<Product> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,pageable);
+            return getProductDtoResponses(productEntities);
+        }
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.dto.order;
 
 import lombok.*;
+import org.graduate.shoefastbe.dto.attribute.AttributeDtoResponse;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,7 +13,7 @@ public class OrderDetailResponse {
     private Double originPrice;
     private Long quantity;
     private Double sellPrice;
-    private Long attributeId;
+    private AttributeDtoResponse attribute;
     private Long attributeSize;
     private Long orderId;
 }

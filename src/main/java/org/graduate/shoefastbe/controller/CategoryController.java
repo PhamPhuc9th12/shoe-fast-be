@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/category")
 @AllArgsConstructor
+@CrossOrigin
 public class CategoryController {
     private final CategoryService categoryService;
 

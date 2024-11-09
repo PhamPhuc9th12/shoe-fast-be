@@ -116,8 +116,8 @@ public class OrderController {
         return orderService.updateSuccess(updateStatusOrderRequest);
     }
     @GetMapping("/page-admin")
-    Page<OrderDtoResponse> getPage(@RequestParam Long id, @ParameterObject Pageable pageable){
-        return orderService.getPage(id, pageable);
+    Page<OrderDtoResponse> getPage(@RequestParam(required = false) Long status, @ParameterObject Pageable pageable){
+        return orderService.getPage(status, pageable);
     }
     @GetMapping("/admin/page-orders-between-date")
     Page<OrderDtoResponse> getOrderBetweenDate(@RequestParam Long id,

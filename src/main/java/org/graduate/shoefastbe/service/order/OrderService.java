@@ -32,6 +32,6 @@ public interface OrderService {
 
     OrderDtoResponse updateShipment(UpdateStatusOrderRequest updateStatusOrderRequest);
     OrderDtoResponse updateSuccess(UpdateStatusOrderRequest updateStatusOrderRequest);
-    Page<OrderDtoResponse> getPage(Long id, Pageable pageable);
+    Page<OrderDtoResponse> getPage(Long statusId, Pageable pageable);
     Page<OrderDtoResponse> getOrderBetweenDate(Long id, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 }

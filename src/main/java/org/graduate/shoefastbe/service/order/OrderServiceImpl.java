@@ -7,6 +7,7 @@ import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
 import org.graduate.shoefastbe.dto.order.*;
 import org.graduate.shoefastbe.dto.product.ProductReport;
 import org.graduate.shoefastbe.entity.*;
+import org.graduate.shoefastbe.mapper.AttributeMapper;
 import org.graduate.shoefastbe.mapper.OrderMapper;
 import org.graduate.shoefastbe.repository.*;
 import org.graduate.shoefastbe.util.MailUtil;
@@ -37,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final NotificationRepository notificationRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final AttributeMapper attributeMapper;
     private final ImageRepository imageRepository;
 
     @Override
@@ -103,7 +105,7 @@ public class OrderServiceImpl implements OrderService {
                         .originPrice(orderDetailEntity.getOriginPrice())
                         .orderId(orderDetailEntity.getOrderId())
                         .attributeSize(attributeMap.get(orderDetailEntity.getAttributeId()).getSize())
-                        .attributeId(orderDetailEntity.getAttributeId())
+                        .attribute(attributeMapper.getResponseFromEntity(attributeMap.get(orderDetailEntity.getAttributeId())))
                         .build()
         ).collect(Collectors.toList());
     }
@@ -497,13 +499,18 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderDtoResponse> getPage(Long id, Pageable pageable) {
-        OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
-                () -> new RuntimeException(CodeAndMessage.ERR3)
-        );
-        if (orderStatus == null) {
-            return orderRepository.findAll(pageable).map(orderMapper::getResponseByEntity);
+        if(id != 0L){
+            OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
+                    () -> new RuntimeException(CodeAndMessage.ERR3)
+            );
+            if (orderStatus == null) {
+                return orderRepository.findAll(pageable).map(orderMapper::getResponseByEntity);
+            }
+            return orderRepository.findAllByOrderStatusId(id, pageable).map(orderMapper::getResponseByEntity);
+        }else{
+            Page<Order> orders = orderRepository.findAll(pageable);
+            return orders.map(orderMapper::getResponseByEntity);
         }
-        return orderRepository.findAllByOrderStatusId(id, pageable).map(orderMapper::getResponseByEntity);
     }
 
     @Override
