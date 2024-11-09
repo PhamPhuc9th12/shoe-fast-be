@@ -8,7 +8,7 @@ import lombok.*;
 @Setter
 @Builder
 public class MonthSynthesis {
-    private Long month;
+    private Integer month;
     private Long count;
     private Double total;
 }

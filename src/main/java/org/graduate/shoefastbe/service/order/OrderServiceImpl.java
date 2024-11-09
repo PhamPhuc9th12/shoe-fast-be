@@ -281,6 +281,7 @@ public class OrderServiceImpl implements OrderService {
                 orderCount = orderDetailList.stream().map(OrderDetail::getOrderId).collect(Collectors.toSet()).size();
             }
             ProductReport productReport = ProductReport.builder()
+                    .id(product.getId())
                     .amount(totalAmount)
                     .name(product.getName())
                     .count(orderCount)
@@ -295,9 +296,9 @@ public class OrderServiceImpl implements OrderService {
     public Page<OrderDtoResponse> getOrderByYearAndMonth(Long id, Long year, Long month, Pageable pageable) {
         Page<Order> orders;
         if(id == 0L){
-            orders = orderRepository.findOrderByYearAndMonth(year, month, pageable);
+            orders = orderRepository.findOrderByYearAndMonth(Math.toIntExact(year), Math.toIntExact(month), pageable);
         }else{
-            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id,year,month,pageable);
+            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id,Math.toIntExact(year),Math.toIntExact(month),pageable);
         }
         return orders.map(orderMapper::getResponseByEntity);
     }
@@ -310,20 +311,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<MonthSynthesis> getReportByMonth(Long year) {
-        List<Order> orders = orderRepository.reportAmountMonth(year);
-        List<MonthSynthesis> monthSyntheses = new ArrayList<>();
-        for(Order order: orders){
-            MonthSynthesis monthSynthesis = MonthSynthesis.builder()
-                    .month((long) order.getCreateDate().getMonthValue())
-                    .count(order.getId())
-                    .total(order.getTotal())
-                    .build();
-            monthSyntheses.add(monthSynthesis);
-        }
-        return monthSyntheses;
+        return orderRepository.reportAmountMonth(Math.toIntExact(year));
     }
 
     @Override
+    @Transactional
     public OrderDtoResponse update(OrderUpdateRequest orderUpdateRequest) {
         Order order = orderRepository.findById(orderUpdateRequest.getOrderId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
@@ -340,6 +332,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDtoResponse cancelOrderAdmin(UpdateStatusOrderRequest orderUpdateRequest) {
         Order order = orderRepository.findById(orderUpdateRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
@@ -380,6 +373,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDtoResponse updateProcess(UpdateStatusOrderRequest orderUpdateRequest) {
         Order order = orderRepository.findById(orderUpdateRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
@@ -391,7 +385,7 @@ public class OrderServiceImpl implements OrderService {
             OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.IS_LOADING.getValue());
             order.setOrderStatusId(orderStt.getId());
             order.setModifyDate(LocalDate.now());
-            orderRepository.save(order);
+            orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
             throw new RuntimeException("ACCEPTED");
@@ -405,6 +399,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDtoResponse updateShipment(UpdateStatusOrderRequest updateStatusOrderRequest) {
         Order order = orderRepository.findById(updateStatusOrderRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
@@ -422,7 +417,7 @@ public class OrderServiceImpl implements OrderService {
             order.setCode(updateStatusOrderRequest.getCode());
             order.setShipDate(updateStatusOrderRequest.getShipDate());
             order.setModifyDate(LocalDate.now());
-            orderRepository.save(order);
+            orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
             throw new RuntimeException("IS_DELIVERY");
@@ -434,6 +429,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDtoResponse updateSuccess(UpdateStatusOrderRequest updateStatusOrderRequest) {
         Order order = orderRepository.findById(updateStatusOrderRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
