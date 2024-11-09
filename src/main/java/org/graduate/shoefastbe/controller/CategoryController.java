@@ -23,4 +23,15 @@ public class CategoryController {
     public CategoryResponse create(@RequestBody CategoryRequest categoryRequest){
         return categoryService.create(categoryRequest);
     }
+
+    @PostMapping("/update")
+    public CategoryResponse update(@RequestBody CategoryRequest categoryRequest){
+        return categoryService.update(categoryRequest);
+    }
+
+    @PostMapping("/detail")
+    public CategoryResponse getDetail(@RequestParam Long id){
+        return categoryService.getDetail(id);
+    }
+
 }
