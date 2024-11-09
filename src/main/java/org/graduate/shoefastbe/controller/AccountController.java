@@ -16,7 +16,8 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/user")
 @AllArgsConstructor
-@CrossOrigin()
+//@CrossOrigin(origins = "https://25fd-116-101-91-180.ngrok-free.app")
+@CrossOrigin
 public class AccountController {
     private final AccountService accountService;
 

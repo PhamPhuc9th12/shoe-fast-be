@@ -431,11 +431,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDtoResponse updateSuccess(UpdateStatusOrderRequest updateStatusOrderRequest) {
+
         Order order = orderRepository.findById(updateStatusOrderRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
 
-        OrderStatus orderStt = orderStatusRepository.findById(order.getId()).orElseThrow(
+        OrderStatus orderStt = orderStatusRepository.findById(order.getOrderStatusId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
 

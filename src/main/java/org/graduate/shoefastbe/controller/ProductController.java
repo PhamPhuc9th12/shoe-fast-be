@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/product")
 @CrossOrigin
 @AllArgsConstructor
+//@CrossOrigin(origins = "https://25fd-116-101-91-180.ngrok-free.app")
 public class ProductController {
     private final ProductService productService;
 
