@@ -1,8 +1,10 @@
 package org.graduate.shoefastbe.service.uploadfile;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Service
+@Transactional(readOnly = true)
 public class FilesStorageServiceImpl implements FilesStorageService {
     @Autowired
     ServletContext app;
@@ -34,25 +37,63 @@ public class FilesStorageServiceImpl implements FilesStorageService {
     }
 
     @Override
+    @Transactional
     public void save(MultipartFile file) {
         try {
+            File directory = Files.createDirectory(root).toFile();
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
             Files.copy(file.getInputStream(), this.root.resolve(file.getOriginalFilename()));
         } catch (Exception e) {
             throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
         }
     }
 
+    //    @Override
+//    @Transactional
+//    public List<String> upload(MultipartFile[] files) {
+//        List<String> filenames = new ArrayList<>();
+//        for (MultipartFile file : files) {
+//            Path p = this.root.resolve(file.getOriginalFilename());
+//            try{
+//                file.transferTo(p);
+//                filenames.add(file.getOriginalFilename());
+//            }catch (Exception e){
+//                throw new RuntimeException(e.getMessage());
+//            }
+//        }
+//        return filenames;
+//    }
     @Override
+    @Transactional
     public List<String> upload(MultipartFile[] files) {
         List<String> filenames = new ArrayList<>();
-        for (MultipartFile file : files) {
-            Path p = this.root.resolve(file.getOriginalFilename());
-            try{
-                file.transferTo(p);
-                filenames.add(file.getOriginalFilename());
-            }catch (Exception e){
-                throw new RuntimeException(e.getMessage());
+        try {
+            Files.createDirectories(this.root); // Đảm bảo thư mục tồn tại
+            for (MultipartFile file : files) {
+                String originalFilename = file.getOriginalFilename();
+
+                // Kiểm tra tên file có hợp lệ hay không
+                if (originalFilename == null || originalFilename.contains("..")) {
+                    throw new RuntimeException("Invalid file path: " + originalFilename);
+                }
+
+                // Chuẩn hóa tên tệp (loại bỏ các ký tự không hợp lệ và thay thế khoảng trắng)
+                String filename = originalFilename.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+
+                // Đảm bảo tên tệp không bị trùng lặp bằng cách thêm timestamp hoặc UUID
+                Path path = this.root.resolve(filename);
+                if (Files.exists(path)) {
+                    String newFilename = System.currentTimeMillis() + "-" + filename;
+                    path = this.root.resolve(newFilename);
+                    filename = newFilename;
+                }
+                file.transferTo(path);
+                filenames.add(filename);
             }
+        } catch (Exception e) {
+            throw new RuntimeException("File upload failed: " + e.getMessage(), e);
         }
         return filenames;
     }
@@ -82,6 +123,7 @@ public class FilesStorageServiceImpl implements FilesStorageService {
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
         FileSystemUtils.deleteRecursively(root.toFile());
     }

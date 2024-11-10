@@ -20,6 +20,6 @@ public class Image {
     private Boolean isActive;
     private String name;
     private Long productId;
-    private LocalDate crateDate;
+    private LocalDate createDate;
     private LocalDate modifyDate;
 }

@@ -3,11 +3,9 @@ package org.graduate.shoefastbe.service.products;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.Common;
+import org.graduate.shoefastbe.common.cloudinary.CloudinaryHelper;
 import org.graduate.shoefastbe.dto.category.AttributeDtoRequest;
-import org.graduate.shoefastbe.dto.product.CreateProductRequest;
-import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
-import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
-import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
+import org.graduate.shoefastbe.dto.product.*;
 import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.ProductMapper;
 import org.graduate.shoefastbe.repository.*;
@@ -15,10 +13,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -107,13 +108,14 @@ public class ProductServiceImpl implements ProductService {
         Sales sales = salesRepository.findById(product.getSaleId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
+        List<Image> images = imageRepository.findAllByProductId(productId);
         List<String> imgURLs = new ArrayList<>();
-        for(int i = 0; i<6 ; i++){
-            imgURLs.add(Common.DEFAULT_IMAGE);
+        for (Image image : images) {
+            imgURLs.add(image.getImageLink());
         }
         return ProductDetailResponse.builder()
                 .attributes(attributeEntities)
-                .main(Common.DEFAULT_IMAGE)
+                .main(images.stream().filter(image -> image.getName().equals("main")).collect(Collectors.toList()).get(0).getImageLink())
                 .price(price)
                 .brandId(product.getBrandId())
                 .categoryIds(categoryEntities.stream().map(ProductCategory::getCategoryId).collect(Collectors.toList()))
@@ -156,9 +158,10 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+
     @Override
     @Transactional
-    public ProductDtoResponse create(CreateProductRequest createProductRequest) {
+    public ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles) {
         Product product = productRepository.findByCode(createProductRequest.getCode());
         if(Objects.nonNull(product)){
             throw new RuntimeException(CodeAndMessage.ERR9);
@@ -187,7 +190,7 @@ public class ProductServiceImpl implements ProductService {
 
         }
         /*Create image of product*/
-        List<String> imageUrl = createProductRequest.getImageUrl();
+        List<String> imageUrl = getImageUrls(multipartFiles);
         for(int i = 0; i < imageUrl.size(); i++){
             Image image = new Image();
             if(i == 0){
@@ -196,7 +199,7 @@ public class ProductServiceImpl implements ProductService {
                 image.setName("other");
             }
             image.setImageLink(imageUrl.get(i));
-            image.setCrateDate(LocalDate.now());
+            image.setCreateDate(LocalDate.now());
             image.setModifyDate(LocalDate.now());
             image.setIsActive(Boolean.TRUE);
             image.setProductId(productEntity.getId());
@@ -217,6 +220,17 @@ public class ProductServiceImpl implements ProductService {
             attributeRepository.save(attribute);
         }
         return productMapper.getResponseFromEntity(productEntity);
+    }
+
+    private List<String> getImageUrls(List<MultipartFile> multipartFiles) {
+        if (Objects.isNull(multipartFiles) || multipartFiles.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<String> imageUrls = new ArrayList<>();
+        for (MultipartFile multipartFile : multipartFiles) {
+            imageUrls.add(CloudinaryHelper.uploadAndGetFileUrl(multipartFile));
+        }
+        return imageUrls;
     }
 
     @Override
@@ -240,7 +254,7 @@ public class ProductServiceImpl implements ProductService {
 
         }
         /*Create attribute of product*/
-        List<AttributeDtoRequest> reqAttributeDtos = createProductRequest.getAttribute();
+       List<AttributeDtoRequest> reqAttributeDtos = new ArrayList<>();
         for(AttributeDtoRequest r: reqAttributeDtos){
             Attribute attribute = attributeRepository.findByProductIdAndSize(productEntity.getId(),39L);
             if(Objects.nonNull(attribute)){
@@ -286,6 +300,10 @@ public class ProductServiceImpl implements ProductService {
         Map<Long, Sales> salesEntityMap = salesEntities.stream().collect(Collectors.toMap(
                 Sales::getId,Function.identity()
         ));
+        Map<Long, Image> imageMap = imageRepository.findAllByProductIdIn(productEntities
+                .stream().map(Product::getId).collect(Collectors.toList()))
+                .stream().filter(image -> image.getName().equals("main"))
+                .collect(Collectors.toMap(Image::getProductId, Function.identity()));
 
         return productEntities.map(
                 product -> {
@@ -298,7 +316,7 @@ public class ProductServiceImpl implements ProductService {
                             .code(product.getCode())
                             .view(product.getView())
                             .description(product.getDescription())
-                            .image(Common.DEFAULT_IMAGE)
+                            .image(imageMap.get(product.getId()).getImageLink())
                             .discount(salesEntityMap.get(product.getSaleId()).getDiscount())
                             .isActive(product.getIsActive())
                             .build();

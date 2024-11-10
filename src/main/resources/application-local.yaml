@@ -29,7 +29,7 @@ spring:
       hibernate.query.in_clause_parameter_padding: true
       hibernate.format_sql: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/shoe_store
+    url: jdbc:postgresql://localhost:5432/shoe_store_v2
     username: postgres
     password: 09122002
     driver-class-name: org.postgresql.Driver

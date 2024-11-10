@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -32,6 +33,8 @@ public class SaleServiceImpl implements SaleService{
     @Transactional
     public SaleResponse create(SaleResponse saleResponse) {
         Sales sales = saleMapper.getEntityBy(saleResponse);
+        sales.setCreateDate(LocalDate.now());
+        sales.setModifyDate(LocalDate.now());
         salesRepository.save(sales);
         return saleMapper.getResponseBy(sales);
     }

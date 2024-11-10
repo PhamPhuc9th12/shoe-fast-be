@@ -3,6 +3,7 @@ package org.graduate.shoefastbe.controller;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.common.FileInfo;
 import org.graduate.shoefastbe.common.ResponseMessage;
+import org.graduate.shoefastbe.common.cloudinary.CloudinaryHelper;
 import org.graduate.shoefastbe.service.uploadfile.FilesStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -43,10 +44,17 @@ public class FilesController {
     }
   }
 
+//  @PostMapping("/api/v1/upload-image")
+//  public ResponseEntity<?> upload(@RequestParam("file") MultipartFile[] multipartFiles){
+//    return new ResponseEntity<>(storageService.upload(multipartFiles), HttpStatus.OK);
+//  }
   @PostMapping("/api/v1/upload-image")
   public ResponseEntity<?> upload(@RequestParam("file") MultipartFile[] multipartFiles){
-    System.out.println(Arrays.toString(multipartFiles));
-    return new ResponseEntity<>(storageService.upload(multipartFiles), HttpStatus.OK);
+    List<String> imageUrls = new ArrayList<>();
+    for(MultipartFile multipartFile : multipartFiles){
+      imageUrls.add(CloudinaryHelper.uploadAndGetFileUrl(multipartFile));
+    }
+    return new ResponseEntity<>(imageUrls, HttpStatus.OK);
   }
   @GetMapping("/api/v1/files")
   public ResponseEntity<List<FileInfo>> getListFiles() {

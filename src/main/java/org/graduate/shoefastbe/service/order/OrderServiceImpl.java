@@ -457,12 +457,14 @@ public class OrderServiceImpl implements OrderService {
                 attribute.setCache(attribute.getCache() - o.getQuantity());
                 attributeRepository.save(attribute);
             }
-            Voucher v = voucherRepository.findById(order.getVoucherId()).orElseThrow(
-                    () -> new RuntimeException(CodeAndMessage.ERR3)
-            );
-            if(v != null){
-                v.setIsActive(Boolean.FALSE);
-                voucherRepository.save(v);
+            if(Objects.nonNull(order.getVoucherId())){
+                Voucher v = voucherRepository.findById(order.getVoucherId()).orElseThrow(
+                        () -> new RuntimeException(CodeAndMessage.ERR3)
+                );
+                if(v != null){
+                    v.setIsActive(Boolean.FALSE);
+                    voucherRepository.save(v);
+                }
             }
             if(order.getTotal() > 1000000){
                 Voucher voucher = new Voucher();

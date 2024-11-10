@@ -1,12 +1,12 @@
 package org.graduate.shoefastbe.service.products;
 
-import org.graduate.shoefastbe.dto.product.CreateProductRequest;
-import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
-import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
-import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
+import org.graduate.shoefastbe.dto.product.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 
 public interface ProductService {
@@ -21,7 +21,7 @@ public interface ProductService {
     Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable);
 
     //admin
-    ProductDtoResponse create( CreateProductRequest createProductRequest);
+    ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles);
     ProductDtoResponse update( CreateProductRequest createProductRequest);
 
 }

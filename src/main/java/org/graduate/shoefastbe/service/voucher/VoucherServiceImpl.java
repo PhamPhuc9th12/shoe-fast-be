@@ -52,6 +52,7 @@ public class VoucherServiceImpl implements VoucherService{
     @Override
     public VoucherDtoResponse create(Voucher voucher) {
          Voucher voucher1 = voucherRepository.save(voucher);
+         voucher1.setCreateDate(LocalDate.now());
         return voucherMapper.getResponseByEntity(voucher1);
     }
 

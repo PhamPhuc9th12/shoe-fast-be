@@ -5,6 +5,7 @@ import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessHandle;
 import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.common.Common;
+import org.graduate.shoefastbe.common.enums.TypeImage;
 import org.graduate.shoefastbe.dto.cart.CartItemDetailResponse;
 import org.graduate.shoefastbe.dto.cart.CartItemDtoRequest;
 import org.graduate.shoefastbe.dto.cart.CartItemDtoResponse;
@@ -31,6 +32,7 @@ public class CartItemServiceImpl implements CartItemService{
     private final AccountRepository accountRepository;
     private final SalesRepository salesRepository;
     private final ProductRepository productRepository;
+    private final ImageRepository imageRepository;
     @Override
     @Transactional
     public CartItemDtoResponse modifyCartItem(CartItemDtoRequest cartItemDtoRequest) {
@@ -101,6 +103,10 @@ public class CartItemServiceImpl implements CartItemService{
         Map<Long, Long> productSaleMap = productEntities.stream().collect(Collectors.toMap(
                 Product::getId, Product::getSaleId
         ));
+        Map<Long, String> imageMap = imageRepository.findAllByProductIdIn(productIds).stream().filter(
+                image -> image.getName().equals(TypeImage.main.name())
+        ).collect(Collectors.toMap(Image::getProductId, Image::getImageLink));
+
         Map<Long, Sales> salesEntityMap = salesRepository.findAllByIdIn(productEntities
                 .stream()
                 .map(Product::getSaleId)
@@ -119,7 +125,7 @@ public class CartItemServiceImpl implements CartItemService{
                             .stock(attribute.getStock())
                             .price(attribute.getPrice())
                             .name(attribute.getName())
-                            .image(Common.DEFAULT_IMAGE)
+                            .image(imageMap.get(attribute.getProductId()))
                             .discount(salesEntityMap.get(productSaleMap.get(attribute.getProductId())).getDiscount())
                             .quantity(cartItem.getQuantity())
                             .lastPrice(cartItem.getLastPrice())

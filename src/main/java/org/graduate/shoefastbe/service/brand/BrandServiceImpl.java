@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +36,8 @@ public class BrandServiceImpl implements BrandService {
     @Transactional
     public BrandResponse create(BrandRequest brandRequest) {
         Brands brands = brandsMapper.getEntityBy(brandRequest);
+        brands.setCreateDate(LocalDate.now());
+        brands.setModifyDate(LocalDate.now());
         brandsRepository.save(brands);
         return brandsMapper.getResponseBy(brands);
     }

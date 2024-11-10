@@ -1,8 +1,11 @@
 package org.graduate.shoefastbe.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.*;
 import org.graduate.shoefastbe.dto.brands.BrandResponse;
+import org.graduate.shoefastbe.dto.category.AttributeDtoRequest;
 import org.graduate.shoefastbe.dto.product.CreateProductRequest;
 import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
 import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
@@ -12,6 +15,10 @@ import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/product")
@@ -67,13 +74,15 @@ public class ProductController {
         return productService.getProductByBrand(brandId, pageable);
     }
 
-    @PostMapping("/create")
-    ProductDtoResponse create(@RequestParam CreateProductRequest createProductRequest) {
-        return productService.create(createProductRequest);
-    }
+@PostMapping("/create")
+public ProductDtoResponse create(@ModelAttribute CreateProductRequest createProductRequest,
+                                 @RequestPart("files") List<MultipartFile> multipartFileList) throws IOException {
+    return productService.create(createProductRequest, multipartFileList);
+}
+
 
     @PostMapping("/modify")
     ProductDtoResponse update(@RequestParam CreateProductRequest createProductRequest) {
-        return productService.create(createProductRequest);
+        return productService.update(createProductRequest);
     }
 }

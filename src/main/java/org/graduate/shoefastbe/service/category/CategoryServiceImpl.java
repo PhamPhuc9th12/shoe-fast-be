@@ -34,6 +34,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryResponse create(CategoryRequest categoryRequest) {
         Category category = categoryMapper.getEntityBy(categoryRequest);
+        category.setCreateDate(LocalDate.now());
+        category.setModifyDate(LocalDate.now());
         categoryRepository.save(category);
         return categoryMapper.getResponseBy(category);
     }
