@@ -14,6 +14,7 @@ import org.graduate.shoefastbe.service.products.ProductService;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,8 +31,17 @@ public class ProductController {
 
     @GetMapping("/get-all")
     @Operation(summary = "Lấy page product")
-    Page<ProductDtoResponse> getAllProduct(@ParameterObject Pageable pageable) {
-        return productService.getAllProduct(pageable);
+    Page<ProductDtoResponse> getAllProduct(@ParameterObject Pageable pageable,@RequestHeader("Authorization") String accessToken) {
+        return productService.getAllProduct(pageable,accessToken);
+    }
+
+    @PutMapping("/like")
+    @Operation(summary = "Lấy page product")
+    Boolean likeProduct(@RequestParam Long productId,
+                        @RequestParam Boolean liked,
+                        @RequestHeader("Authorization") String accessToken) {
+
+        return productService.likeProduct(productId, liked, accessToken);
     }
 
     @PostMapping("/get-all/filter")
@@ -74,11 +84,11 @@ public class ProductController {
         return productService.getProductByBrand(brandId, pageable);
     }
 
-@PostMapping("/create")
-public ProductDtoResponse create(@ModelAttribute CreateProductRequest createProductRequest,
-                                 @RequestPart("files") List<MultipartFile> multipartFileList) throws IOException {
-    return productService.create(createProductRequest, multipartFileList);
-}
+    @PostMapping("/create")
+    public ProductDtoResponse create(@ModelAttribute CreateProductRequest createProductRequest,
+                                     @RequestPart("files") List<MultipartFile> multipartFileList) throws IOException {
+        return productService.create(createProductRequest, multipartFileList);
+    }
 
 
     @PostMapping("/modify")

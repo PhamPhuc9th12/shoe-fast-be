@@ -17,6 +17,6 @@ public class CodeAndMessage {
     public static final String ERR7 = "ERR7-Voucher is inactive!!";
     public static final String ERR8 = "ERR8-Voucher is not enough!!";
     public static final String ERR9 = "ERR9- Dữ liệu đã tồn tại!!";
-
+    public static final String ERR10 = "Cần đăng nhập trước";
 
 }

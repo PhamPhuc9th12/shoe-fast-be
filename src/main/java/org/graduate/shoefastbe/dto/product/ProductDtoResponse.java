@@ -18,4 +18,5 @@ public class ProductDtoResponse {
     private String brand;
     private Long discount;
     private Boolean isActive;
+    private Boolean liked;
 }

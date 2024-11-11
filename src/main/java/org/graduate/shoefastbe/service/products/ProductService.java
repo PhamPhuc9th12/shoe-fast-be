@@ -10,7 +10,8 @@ import java.util.List;
 
 
 public interface ProductService {
-    Page<ProductDtoResponse> getAllProduct(Pageable pageable);
+    Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken);
+    Boolean likeProduct(Long productId, Boolean liked, String accessToken);
 
     Page<ProductDtoResponse> getAllProductFilter(ProductDtoRequest productDtoRequest, Pageable pageable);
 

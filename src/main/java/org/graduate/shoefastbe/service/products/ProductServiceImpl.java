@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.products;
 
 import lombok.AllArgsConstructor;
+import org.graduate.shoefastbe.base.authen.TokenHelper;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.Common;
 import org.graduate.shoefastbe.common.cloudinary.CloudinaryHelper;
@@ -10,16 +11,15 @@ import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.ProductMapper;
 import org.graduate.shoefastbe.repository.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,10 +35,63 @@ public class ProductServiceImpl implements ProductService {
     private final BrandsRepository brandsRepository;
     private final ProductMapper productMapper;
     private final ProductCategoryRepository productCategoryRepository;
+    private final ProductAccountLikeMapRepository productAccountLikeMapRepository;
     @Override
-    public Page<ProductDtoResponse> getAllProduct(Pageable pageable) {
-        Page<Product> productEntities = productRepository.findAll(pageable);
-        return getProductDtoResponses(productEntities);
+    public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
+        Long userId = TokenHelper.getUserIdFromToken(accessToken);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Order.asc("id")));
+        if(Objects.isNull(userId)){
+            Page<Product> productEntities = productRepository.findAll(sortedPageable);
+            return getProductDtoResponses(productEntities);
+        }else{
+            Page<Product> productEntities = productRepository.findAll(sortedPageable);
+            Map<Long, Boolean> likeMap = productAccountLikeMapRepository.findAllByAccountId(userId)
+                    .stream().collect(Collectors.toMap(ProductAccountLikeMap::getProductId, ProductAccountLikeMap::getLiked));
+            Page<ProductDtoResponse> productDtoResponses =  getProductDtoResponses(productEntities);
+            productDtoResponses.forEach(
+                    productDtoResponse -> {
+                        Boolean liked = likeMap.get(productDtoResponse.getId());
+                        productDtoResponse.setLiked(Objects.isNull(liked)? Boolean.FALSE : liked);
+                    }
+            );
+            return productDtoResponses;
+        }
+    }
+
+    @Override
+    @Transactional
+    public Boolean likeProduct(Long productId, Boolean liked, String accessToken) {
+        Long userId = TokenHelper.getUserIdFromToken(accessToken);
+        if(Objects.isNull(userId)) throw  new RuntimeException(CodeAndMessage.ERR10);
+        ProductAccountLikeMap productAccountLikeMap = productAccountLikeMapRepository.findByProductIdAndAccountId(
+                    productId, userId
+        );
+        Product product = productRepository.findById(productId).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        if(Objects.nonNull(productAccountLikeMap)){
+            if(Boolean.TRUE.equals(liked)){
+                productAccountLikeMap.setLiked(liked);
+                productAccountLikeMapRepository.save(productAccountLikeMap);
+                product.setView(product.getView() +1);
+                productRepository.save(product);
+            }else{
+                productAccountLikeMap.setLiked(liked);
+                productAccountLikeMapRepository.save(productAccountLikeMap);
+                product.setView(product.getView() -1);
+                productRepository.save(product);
+            }
+        }else{
+            productAccountLikeMap = ProductAccountLikeMap.builder()
+                    .accountId(userId)
+                    .productId(productId)
+                    .liked(liked)
+                    .build();
+            productAccountLikeMapRepository.save(productAccountLikeMap);
+            product.setView(product.getView() +1);
+            productRepository.save(product);
+        }
+        return productAccountLikeMap.getLiked();
     }
 
     @Override
@@ -151,7 +204,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable) {
         if(brandId == 0){
-             return getAllProduct(pageable);
+             return getAllProduct(pageable, null);
         }else{
             Page<Product> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,pageable);
             return getProductDtoResponses(productEntities);
@@ -319,6 +372,7 @@ public class ProductServiceImpl implements ProductService {
                             .image(imageMap.get(product.getId()).getImageLink())
                             .discount(salesEntityMap.get(product.getSaleId()).getDiscount())
                             .isActive(product.getIsActive())
+                            .liked(Boolean.FALSE)
                             .build();
                 }
         );
