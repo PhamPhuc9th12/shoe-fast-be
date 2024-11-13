@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface ProductAccountLikeMapRepository extends JpaRepository<ProductAccountLikeMap, Long> {
     ProductAccountLikeMap findByProductIdAndAccountId(Long productId, Long accountId);
+    List<ProductAccountLikeMap> findAllByAccountIdAndLiked(Long accountId, Boolean liked);
     List<ProductAccountLikeMap> findAllByAccountId(Long accountId);
 }

@@ -10,10 +10,7 @@ import org.graduate.shoefastbe.dto.product.*;
 import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.ProductMapper;
 import org.graduate.shoefastbe.repository.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,13 +35,14 @@ public class ProductServiceImpl implements ProductService {
     private final ProductAccountLikeMapRepository productAccountLikeMapRepository;
     @Override
     public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
-        Long userId = TokenHelper.getUserIdFromToken(accessToken);
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Order.asc("id")));
-        if(Objects.isNull(userId)){
+        if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
             return getProductDtoResponses(productEntities);
         }else{
+            Long userId = TokenHelper.getUserIdFromToken(accessToken);
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
+
             Map<Long, Boolean> likeMap = productAccountLikeMapRepository.findAllByAccountId(userId)
                     .stream().collect(Collectors.toMap(ProductAccountLikeMap::getProductId, ProductAccountLikeMap::getLiked));
             Page<ProductDtoResponse> productDtoResponses =  getProductDtoResponses(productEntities);
@@ -197,6 +195,25 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<ProductDtoResponse> getAllProductWishlist(String accessToken, Pageable pageable) {
+        if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)) {
+           throw new RuntimeException(CodeAndMessage.ERR10);
+        }
+        Long userId = TokenHelper.getUserIdFromToken(accessToken);
+        List<ProductAccountLikeMap> productAccountLikeMaps = productAccountLikeMapRepository.findAllByAccountIdAndLiked(userId,Boolean.TRUE);
+        Page<Product> products = productRepository.findAllByIdIn(productAccountLikeMaps.stream()
+                .map(ProductAccountLikeMap::getProductId).collect(Collectors.toList()), pageable);
+        List<Product> productList = new ArrayList<>();
+        for(Product p : products){
+            if(p.getIsActive().equals(Boolean.TRUE)){
+                productList.add(p);
+            }
+        }
+        Page<Product> productPageFilterPage = new PageImpl<>(productList,pageable,productList.size());
+        return getProductDtoResponses(productPageFilterPage);
+    }
+
+    @Override
     public Long countProduct() {
         return productRepository.count();
     }
@@ -215,9 +232,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles) {
+        if(Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(),createProductRequest.getCode().trim()))){
+            throw new RuntimeException(CodeAndMessage.ERR11);
+        }
         Product product = productRepository.findByCode(createProductRequest.getCode());
         if(Objects.nonNull(product)){
-            throw new RuntimeException(CodeAndMessage.ERR9);
+            throw new RuntimeException(CodeAndMessage.ERR11);
         }
         /*Create product from data*/
         Product productEntity = Product.builder()

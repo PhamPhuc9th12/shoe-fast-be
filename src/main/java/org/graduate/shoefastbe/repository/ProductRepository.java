@@ -14,9 +14,12 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByBrandIdIn(Collection<Long> brandIds);
+    Page<Product> findAllByIsActive(Boolean isActive, Pageable pageable);
     List<Product> findAllByIdIn(Collection<Long> productIds);
+    Page<Product> findAllByIdIn(Collection<Long> productIds,Pageable pageable);
     Product findByCode(String code);
     List<Product> findAllBySaleId(Long saleId);
+    Boolean existsByNameOrCode(String name, String code);
     @Query("SELECT p FROM Product p INNER JOIN ProductCategory pc ON p.id = pc.productId INNER JOIN Category c on pc.categoryId = c.id where c.id = :categoryId")
     List<Product> findAllProductByCategory(@Param("categoryId") Long categoryId);
 

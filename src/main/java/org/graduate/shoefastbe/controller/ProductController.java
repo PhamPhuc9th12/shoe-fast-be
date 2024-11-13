@@ -25,13 +25,13 @@ import java.util.List;
 @RequestMapping("/api/v1/product")
 @CrossOrigin
 @AllArgsConstructor
-//@CrossOrigin(origins = "https://25fd-116-101-91-180.ngrok-free.app")
+
 public class ProductController {
     private final ProductService productService;
 
     @GetMapping("/get-all")
     @Operation(summary = "Lấy page product")
-    Page<ProductDtoResponse> getAllProduct(@ParameterObject Pageable pageable,@RequestHeader("Authorization") String accessToken) {
+    Page<ProductDtoResponse> getAllProduct(@ParameterObject Pageable pageable,@RequestHeader(value = "Authorization", required = false) String accessToken) {
         return productService.getAllProduct(pageable,accessToken);
     }
 
@@ -83,6 +83,13 @@ public class ProductController {
                                                   @ParameterObject Pageable pageable) {
         return productService.getProductByBrand(brandId, pageable);
     }
+
+    @GetMapping("/wish-list")
+    Page<ProductDtoResponse> getAllProductWishlist(@RequestHeader(value = "Authorization", required = false) String accessToken,
+                                                  @ParameterObject Pageable pageable) {
+        return productService.getAllProductWishlist(accessToken, pageable);
+    }
+
 
     @PostMapping("/create")
     public ProductDtoResponse create(@ModelAttribute CreateProductRequest createProductRequest,
