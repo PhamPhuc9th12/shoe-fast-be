@@ -7,6 +7,7 @@ import org.graduate.shoefastbe.entity.Account;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public class TokenHelper {
@@ -67,7 +68,13 @@ public class TokenHelper {
 
 
     public static Long getUserIdFromToken(String token) {
+        if(Objects.isNull(token)){
+            return 0L;
+        }
         token = token.substring(7);
+        if(token.equals("null") ){
+            return 0L;
+        }
         Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY)
                 .parseClaimsJws(token)
