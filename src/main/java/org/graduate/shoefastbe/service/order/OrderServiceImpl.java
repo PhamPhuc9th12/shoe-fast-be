@@ -21,6 +21,7 @@ import javax.mail.MessagingException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,41 +42,69 @@ public class OrderServiceImpl implements OrderService {
     private final AttributeMapper attributeMapper;
     private final ImageRepository imageRepository;
 
+    private final Map<Long, Object> locks = new ConcurrentHashMap<>();
     @Override
     @Transactional
-    public OrderDtoResponse createOrder(OrderDtoRequest orderDtoRequest) {
+    public  OrderDtoResponse createOrder(OrderDtoRequest orderDtoRequest) {
         Account account = accountRepository.findById(orderDtoRequest.getAccountId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.WAIT_ACCEPT.getValue());
-        Order order = orderMapper.getOrderByRequest(orderDtoRequest);
-        order.setOrderStatusId(orderStatus.getId());
-        order.setSeen(Boolean.FALSE);
-        order.setAccountId(account.getId());
-        order.setCreateDate(LocalDate.now());
-        order.setModifyDate(LocalDate.now());
+        locks.putIfAbsent(account.getId(), new Object());
+        synchronized (locks.get(account.getId())){
+            OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.WAIT_ACCEPT.getValue());
+            Order order = orderMapper.getOrderByRequest(orderDtoRequest);
+            order.setOrderStatusId(orderStatus.getId());
+            order.setSeen(Boolean.FALSE);
+            order.setAccountId(account.getId());
+            order.setCreateDate(LocalDate.now());
+            order.setModifyDate(LocalDate.now());
 
-        if (Objects.nonNull(orderDtoRequest.getCode()) && !orderDtoRequest.getCode().isEmpty()) {
-            Voucher voucher = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
-            voucher.setCount(voucher.getCount() - 1);
-            voucherRepository.save(voucher);
-            order.setVoucherId(voucher.getId());
-        }
-
-        order.setEncodeUrl(null);
-        orderRepository.save(order);
-        //create orderDetail
-        createDetailOrder(orderDtoRequest, order);
-        // send notification
-        CompletableFuture.runAsync(() -> {
-            try {
-                sendNotification(order);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            if (Objects.nonNull(orderDtoRequest.getCode()) && !orderDtoRequest.getCode().isEmpty()) {
+                Voucher voucher = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
+                voucher.setCount(voucher.getCount() - 1);
+                voucherRepository.save(voucher);
+                order.setVoucherId(voucher.getId());
             }
-        });
 
-        return orderMapper.getResponseByEntity(order);
+            order.setEncodeUrl(null);
+            orderRepository.save(order);
+            //create orderDetail
+            List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
+                    orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
+            );
+            Map<Long, Attribute> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
+                    Attribute::getId, Function.identity()
+            ));
+
+            for (OrderDetail orderDetail : orderDtoRequest.getOrderDetails()) {
+                Attribute attribute = attributeEntityMap.get(orderDetail.getAttributeId());
+                if (attribute.getStock() < orderDetail.getQuantity()) {
+                    throw new RuntimeException("Sản phẩm đã hết hàng hoặc không đủ số lượng.");
+                }
+                attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
+                attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
+                attributeRepository.save(attribute);
+                orderDetail.setOrderId(order.getId());
+                orderDetailRepository.save(orderDetail);
+                if (Objects.nonNull(orderDtoRequest.getAccountId())) {
+                    CartItem cartItem = cartItemRepository
+                            .findCartItemByAccountIdAndAttributeId(orderDtoRequest.getAccountId(), orderDetail.getAttributeId());
+                    cartItem.setQuantity(0L);
+                    cartItem.setIsActive(Boolean.FALSE);
+                    cartItemRepository.save(cartItem);
+                }
+            }
+            // send notification
+            CompletableFuture.runAsync(() -> {
+                try {
+                    sendNotification(order);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            locks.remove(account.getId());
+            return orderMapper.getResponseByEntity(order);
+        }
     }
 
     @Override
@@ -235,12 +264,12 @@ public class OrderServiceImpl implements OrderService {
                             order -> orderStatus.getId().equals(order.getOrderStatusId())
                     ).collect(Collectors.toList());
                     Double total = 0d;
-                    for(Order order: countOrderEntities){
+                    for (Order order : countOrderEntities) {
                         total += order.getTotal();
                     }
                     YearSynthesis synthesis = YearSynthesis.builder()
                             .year((long) year)
-                            .count((long)countOrderEntities.size())
+                            .count((long) countOrderEntities.size())
                             .total(total)
                             .build();
                     yearSyntheses.add(synthesis);
@@ -267,14 +296,14 @@ public class OrderServiceImpl implements OrderService {
         List<Product> productEntities = productRepository.findAllByIdIn(attributeEntities.stream().map(Attribute::getProductId)
                 .collect(Collectors.toSet()));
         List<ProductReport> productReports = new ArrayList<>();
-        for(Product product : productEntities){
+        for (Product product : productEntities) {
             List<Attribute> attributeList = productAttributeMap.get(product.getId());
             double totalAmount = 0d;
             long orderCount = 0L;
             long quantityProduct = 0L;
-            for(Attribute attribute : attributeList){
+            for (Attribute attribute : attributeList) {
                 List<OrderDetail> orderDetailList = orderAttributeMap.get(attribute.getId());
-                for(OrderDetail orderDetail : orderDetailList){
+                for (OrderDetail orderDetail : orderDetailList) {
                     totalAmount += orderDetail.getQuantity() * orderDetail.getSellPrice();
                     quantityProduct += orderDetail.getQuantity();
                 }
@@ -295,10 +324,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDtoResponse> getOrderByYearAndMonth(Long id, Long year, Long month, Pageable pageable) {
         Page<Order> orders;
-        if(id == 0L){
+        if (id == 0L) {
             orders = orderRepository.findOrderByYearAndMonth(Math.toIntExact(year), Math.toIntExact(month), pageable);
-        }else{
-            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id,Math.toIntExact(year),Math.toIntExact(month),pageable);
+        } else {
+            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id, Math.toIntExact(year), Math.toIntExact(month), pageable);
         }
         return orders.map(orderMapper::getResponseByEntity);
     }
@@ -362,7 +391,7 @@ public class OrderServiceImpl implements OrderService {
             Voucher voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
-            if(voucher != null){
+            if (voucher != null) {
                 voucher.setCount(1L);
                 voucher.setIsActive(Boolean.TRUE);
                 voucherRepository.save(voucher);
@@ -457,16 +486,16 @@ public class OrderServiceImpl implements OrderService {
                 attribute.setCache(attribute.getCache() - o.getQuantity());
                 attributeRepository.save(attribute);
             }
-            if(Objects.nonNull(order.getVoucherId())){
+            if (Objects.nonNull(order.getVoucherId())) {
                 Voucher v = voucherRepository.findById(order.getVoucherId()).orElseThrow(
                         () -> new RuntimeException(CodeAndMessage.ERR3)
                 );
-                if(v != null){
+                if (v != null) {
                     v.setIsActive(Boolean.FALSE);
                     voucherRepository.save(v);
                 }
             }
-            if(order.getTotal() > 1000000){
+            if (order.getTotal() > 1000000) {
                 Voucher voucher = new Voucher();
                 voucher.setCode(generateCode());
                 voucher.setIsActive(Boolean.TRUE);
@@ -487,7 +516,7 @@ public class OrderServiceImpl implements OrderService {
                     System.out.println("Can't send an email.");
                 }
             }
-             orderRepository.save(order);
+            orderRepository.save(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStt.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
             throw new RuntimeException("SUCCESS");
@@ -498,7 +527,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderDtoResponse> getPage(Long id, Pageable pageable) {
-        if(id != 0L){
+        if (id != 0L) {
             OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
@@ -506,7 +535,7 @@ public class OrderServiceImpl implements OrderService {
                 return orderRepository.findAll(pageable).map(orderMapper::getResponseByEntity);
             }
             return orderRepository.findAllByOrderStatusId(id, pageable).map(orderMapper::getResponseByEntity);
-        }else{
+        } else {
             Page<Order> orders = orderRepository.findAll(pageable);
             return orders.map(orderMapper::getResponseByEntity);
         }
@@ -520,34 +549,35 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findOrderByOrderStatusBetweenDate(id, fromDate, toDate, pageable).map(orderMapper::getResponseByEntity);
     }
 
-    private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {
-        List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
-                orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
-        );
-        Map<Long, Attribute> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
-                Attribute::getId, Function.identity()
-        ));
-
-        for (OrderDetail orderDetail : orderDtoRequest.getOrderDetails()) {
-            Attribute attribute = attributeEntityMap.get(orderDetail.getAttributeId());
-            if (attribute.getStock() < orderDetail.getQuantity()) {
-                throw new RuntimeException(CodeAndMessage.ERR5);
-            } else {
-                attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
-                attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
-                attributeRepository.save(attribute);
-                orderDetail.setOrderId(order.getId());
-                orderDetailRepository.save(orderDetail);
-                if (Objects.nonNull(orderDtoRequest.getAccountId())) {
-                    CartItem cartItem = cartItemRepository
-                            .findCartItemByAccountIdAndAttributeId(orderDtoRequest.getAccountId(), orderDetail.getAttributeId());
-                    cartItem.setQuantity(0L);
-                    cartItem.setIsActive(Boolean.FALSE);
-                    cartItemRepository.save(cartItem);
-                }
-            }
-        }
-    }
+//    private void createDetailOrder(OrderDtoRequest orderDtoRequest, Order order) {
+//        List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
+//                orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
+//        );
+//        Map<Long, Attribute> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
+//                Attribute::getId, Function.identity()
+//        ));
+//
+//        for (OrderDetail orderDetail : orderDtoRequest.getOrderDetails()) {
+//            Attribute attribute = attributeEntityMap.get(orderDetail.getAttributeId());
+////            if (attribute.getStock() < orderDetail.getQuantity()) {
+////                throw new RuntimeException(CodeAndMessage.ERR5);
+////            } else {
+////
+////            }
+//            attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
+//            attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
+//            attributeRepository.save(attribute);
+//            orderDetail.setOrderId(order.getId());
+//            orderDetailRepository.save(orderDetail);
+//            if (Objects.nonNull(orderDtoRequest.getAccountId())) {
+//                CartItem cartItem = cartItemRepository
+//                        .findCartItemByAccountIdAndAttributeId(orderDtoRequest.getAccountId(), orderDetail.getAttributeId());
+//                cartItem.setQuantity(0L);
+//                cartItem.setIsActive(Boolean.FALSE);
+//                cartItemRepository.save(cartItem);
+//            }
+//        }
+//    }
 
     private void sendNotification(Order order) {
         Notification notification = Notification
@@ -565,6 +595,7 @@ public class OrderServiceImpl implements OrderService {
             System.out.println("Can't send an email.");
         }
     }
+
     private String generateCode() {
         int leftLimit = 48;
         int rightLimit = 122;
