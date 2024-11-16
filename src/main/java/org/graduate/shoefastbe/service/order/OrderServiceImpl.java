@@ -11,6 +11,7 @@ import org.graduate.shoefastbe.mapper.AttributeMapper;
 import org.graduate.shoefastbe.mapper.OrderMapper;
 import org.graduate.shoefastbe.repository.*;
 import org.graduate.shoefastbe.util.MailUtil;
+import org.hibernate.StaleStateException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -18,10 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
+import javax.persistence.OptimisticLockException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,70 +45,74 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final AttributeMapper attributeMapper;
     private final ImageRepository imageRepository;
-
-    private final Map<Long, Object> locks = new ConcurrentHashMap<>();
     @Override
     @Transactional
     public  OrderDtoResponse createOrder(OrderDtoRequest orderDtoRequest) {
-        Account account = accountRepository.findById(orderDtoRequest.getAccountId()).orElseThrow(
-                () -> new RuntimeException(CodeAndMessage.ERR3)
-        );
-        locks.putIfAbsent(account.getId(), new Object());
-        synchronized (locks.get(account.getId())){
-            OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.WAIT_ACCEPT.getValue());
-            Order order = orderMapper.getOrderByRequest(orderDtoRequest);
-            order.setOrderStatusId(orderStatus.getId());
-            order.setSeen(Boolean.FALSE);
-            order.setAccountId(account.getId());
-            order.setCreateDate(LocalDate.now());
-            order.setModifyDate(LocalDate.now());
+      try{
+          Account account = accountRepository.findById(orderDtoRequest.getAccountId()).orElseThrow(
+                  () -> new RuntimeException(CodeAndMessage.ERR3)
+          );
+          OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.WAIT_ACCEPT.getValue());
+          Order order = orderMapper.getOrderByRequest(orderDtoRequest);
+          order.setOrderStatusId(orderStatus.getId());
+          order.setSeen(Boolean.FALSE);
+          order.setAccountId(account.getId());
+          order.setCreateDate(LocalDate.now());
+          order.setModifyDate(LocalDate.now());
 
-            if (Objects.nonNull(orderDtoRequest.getCode()) && !orderDtoRequest.getCode().isEmpty()) {
-                Voucher voucher = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
-                voucher.setCount(voucher.getCount() - 1);
-                voucherRepository.save(voucher);
-                order.setVoucherId(voucher.getId());
-            }
+          if (Objects.nonNull(orderDtoRequest.getCode()) && !orderDtoRequest.getCode().isEmpty()) {
+              Voucher voucher = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
+              voucher.setCount(voucher.getCount() - 1);
+              voucherRepository.save(voucher);
+              order.setVoucherId(voucher.getId());
+          }
 
-            order.setEncodeUrl(null);
-            orderRepository.save(order);
-            //create orderDetail
-            List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
-                    orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
-            );
-            Map<Long, Attribute> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
-                    Attribute::getId, Function.identity()
-            ));
+          order.setEncodeUrl(null);
+          orderRepository.save(order);
+          //create orderDetail
+          List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(
+                  orderDtoRequest.getOrderDetails().stream().map(OrderDetail::getAttributeId).collect(Collectors.toSet())
+          );
+          Map<Long, Attribute> attributeEntityMap = attributeEntities.stream().collect(Collectors.toMap(
+                  Attribute::getId, Function.identity()
+          ));
 
-            for (OrderDetail orderDetail : orderDtoRequest.getOrderDetails()) {
-                Attribute attribute = attributeEntityMap.get(orderDetail.getAttributeId());
-                if (attribute.getStock() < orderDetail.getQuantity()) {
-                    throw new RuntimeException("Sản phẩm đã hết hàng hoặc không đủ số lượng.");
-                }
-                attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
-                attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
-                attributeRepository.save(attribute);
-                orderDetail.setOrderId(order.getId());
-                orderDetailRepository.save(orderDetail);
-                if (Objects.nonNull(orderDtoRequest.getAccountId())) {
-                    CartItem cartItem = cartItemRepository
-                            .findCartItemByAccountIdAndAttributeId(orderDtoRequest.getAccountId(), orderDetail.getAttributeId());
-                    cartItem.setQuantity(0L);
-                    cartItem.setIsActive(Boolean.FALSE);
-                    cartItemRepository.save(cartItem);
-                }
-            }
-            // send notification
-            CompletableFuture.runAsync(() -> {
-                try {
-                    sendNotification(order);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            locks.remove(account.getId());
-            return orderMapper.getResponseByEntity(order);
-        }
+          for (OrderDetail orderDetail : orderDtoRequest.getOrderDetails()) {
+              Attribute attribute = attributeEntityMap.get(orderDetail.getAttributeId());
+              if (attribute.getStock() < orderDetail.getQuantity()) {
+                  throw new RuntimeException("Sản phẩm đã hết hàng hoặc không đủ số lượng.");
+              }
+              try {
+                  Thread.sleep(10000);
+              } catch (InterruptedException e) {
+                  throw new RuntimeException(e);
+              }
+              attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
+              attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
+
+              attributeRepository.save(attribute);
+              orderDetail.setOrderId(order.getId());
+              orderDetailRepository.save(orderDetail);
+              if (Objects.nonNull(orderDtoRequest.getAccountId())) {
+                  CartItem cartItem = cartItemRepository
+                          .findCartItemByAccountIdAndAttributeId(orderDtoRequest.getAccountId(), orderDetail.getAttributeId());
+                  cartItem.setQuantity(0L);
+                  cartItem.setIsActive(Boolean.FALSE);
+                  cartItemRepository.save(cartItem);
+              }
+          }
+          // send notification
+          CompletableFuture.runAsync(() -> {
+              try {
+                  sendNotification(order);
+              } catch (Exception e) {
+                  throw new RuntimeException(e);
+              }
+          });
+          return orderMapper.getResponseByEntity(order);
+      }catch (OptimisticLockException | StaleStateException exception){
+          return new OrderDtoResponse();
+      }
     }
 
     @Override

@@ -24,4 +24,7 @@ public class Attribute {
     private Long cache;
     private LocalDate createDate;
     private LocalDate modifyDate;
+
+    @Version
+    private Long version;
 }
