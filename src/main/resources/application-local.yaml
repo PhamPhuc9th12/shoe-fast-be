@@ -32,7 +32,7 @@ spring:
       ddl-auto: update
   datasource:
 #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
-    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@postgres.railway.internal:5432/railway
+    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@autorack.proxy.rlwy.net:37238/railway
     username: postgres
 #    password: 09122002
     password: PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq
