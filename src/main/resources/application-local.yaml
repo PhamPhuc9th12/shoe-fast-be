@@ -17,7 +17,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     open-in-view: false
     properties:
@@ -27,8 +26,8 @@ spring:
       hibernate.cache.use_query_cache: false
       hibernate.generate_statistics: true
       hibernate.jdbc.lob.non_contextual_creation: true
-#      hibernate:
-#        dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
       # modify batch size as necessary
       hibernate.jdbc.batch_size: 50
       hibernate.order_inserts: true
@@ -39,7 +38,7 @@ spring:
 
   datasource:
     #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
-    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com/shoe_fast
+    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com:5432/shoe_fast
 #    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a/shoe_fast
     username: user_phuc
     #    password: 09122002
