@@ -39,8 +39,8 @@ spring:
 
   datasource:
     #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
-    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com/shoe_fast
-#    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a/shoe_fast
+#    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com/shoe_fast
+    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a/shoe_fast
     username: user_phuc
     #    password: 09122002
     password: Z1rzC30X31GMujuOTbyIWatN2uDF1Lca
