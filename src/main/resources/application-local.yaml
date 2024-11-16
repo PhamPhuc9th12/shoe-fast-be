@@ -1,5 +1,8 @@
 server:
   port: 8086
+  tomcat:
+    accesslog:
+      enabled: true
 logging:
   level:
     root: INFO
