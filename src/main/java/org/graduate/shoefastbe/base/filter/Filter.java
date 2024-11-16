@@ -1,5 +1,7 @@
 package org.graduate.shoefastbe.base.filter;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,9 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
-
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.util.*;
 
 @Getter

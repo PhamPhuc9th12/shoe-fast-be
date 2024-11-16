@@ -1,5 +1,6 @@
 package org.graduate.shoefastbe.service.uploadfile;
 
+import jakarta.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -8,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -50,21 +50,6 @@ public class FilesStorageServiceImpl implements FilesStorageService {
         }
     }
 
-    //    @Override
-//    @Transactional
-//    public List<String> upload(MultipartFile[] files) {
-//        List<String> filenames = new ArrayList<>();
-//        for (MultipartFile file : files) {
-//            Path p = this.root.resolve(file.getOriginalFilename());
-//            try{
-//                file.transferTo(p);
-//                filenames.add(file.getOriginalFilename());
-//            }catch (Exception e){
-//                throw new RuntimeException(e.getMessage());
-//            }
-//        }
-//        return filenames;
-//    }
     @Override
     @Transactional
     public List<String> upload(MultipartFile[] files) {

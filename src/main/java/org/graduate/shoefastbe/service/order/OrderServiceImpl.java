@@ -1,7 +1,7 @@
 package org.graduate.shoefastbe.service.order;
 
+import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
-import org.aspectj.apache.bcel.classfile.Code;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
 import org.graduate.shoefastbe.dto.order.*;
@@ -19,13 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
-import javax.persistence.OptimisticLockException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

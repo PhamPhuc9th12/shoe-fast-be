@@ -11,7 +11,7 @@ import org.graduate.shoefastbe.service.account.AccountService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/user")

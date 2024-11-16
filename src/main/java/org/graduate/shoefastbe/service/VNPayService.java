@@ -2,7 +2,7 @@ package org.graduate.shoefastbe.service;
 import org.graduate.shoefastbe.base.payment.VNPayConfig;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

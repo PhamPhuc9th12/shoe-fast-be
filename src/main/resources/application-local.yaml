@@ -12,6 +12,8 @@ management:
         include: '*'
 spring:
   jpa:
+#    hibernate:
+#      ddl-auto: update
     show-sql: true
     open-in-view: false
     properties:
@@ -21,6 +23,8 @@ spring:
       hibernate.cache.use_query_cache: false
       hibernate.generate_statistics: true
       hibernate.jdbc.lob.non_contextual_creation: true
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
       # modify batch size as necessary
       hibernate.jdbc.batch_size: 50
       hibernate.order_inserts: true
@@ -28,11 +32,11 @@ spring:
       hibernate.query.fail_on_pagination_over_collection_fetch: true
       hibernate.query.in_clause_parameter_padding: true
       hibernate.format_sql: true
-    hibernate:
-      ddl-auto: update
+
   datasource:
 #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
-    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@autorack.proxy.rlwy.net:37238/railway
+    url: jdbc:postgresql://autorack.proxy.rlwy.net:37238/railway
+#    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@postgres.railway.internal:5432/railway
     username: postgres
 #    password: 09122002
     password: PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq
