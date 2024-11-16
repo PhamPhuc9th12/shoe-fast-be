@@ -12,8 +12,8 @@ management:
         include: '*'
 spring:
   jpa:
-#    hibernate:
-#      ddl-auto: update
+    #    hibernate:
+    #      ddl-auto: update
     show-sql: true
     open-in-view: false
     properties:
@@ -34,11 +34,12 @@ spring:
       hibernate.format_sql: true
 
   datasource:
-#    url: jdbc:postgresql://localhost:5432/shoe_store_v2
+    #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
+    #    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@autorack.proxy.rlwy.net:37238/railway
     url: jdbc:postgresql://autorack.proxy.rlwy.net:37238/railway
-#    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@postgres.railway.internal:5432/railway
+    #    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@postgres.railway.internal:5432/railway
     username: postgres
-#    password: 09122002
+    #    password: 09122002
     password: PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq
     driver-class-name: org.postgresql.Driver
     hikari:
