@@ -36,7 +36,7 @@ spring:
   datasource:
     #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
     #    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@autorack.proxy.rlwy.net:37238/railway
-    url: jdbc:postgresql://autorack.proxy.rlwy.net:37238/railway
+    url: jdbc:postgresql://autorack.proxy.rlwy.net:37238/railway?sslmode=require
     #    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@postgres.railway.internal:5432/railway
     username: postgres
     #    password: 09122002
