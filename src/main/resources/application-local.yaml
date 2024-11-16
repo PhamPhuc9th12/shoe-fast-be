@@ -29,9 +29,11 @@ spring:
       hibernate.query.in_clause_parameter_padding: true
       hibernate.format_sql: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/shoe_store_v2
+#    url: jdbc:postgresql://localhost:5432/shoe_store_v2
+    url: jdbc:postgresql://postgres:PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq@postgres.railway.internal:5432/railway
     username: postgres
-    password: 09122002
+#    password: 09122002
+    password: PvRldcLhDhkBEDJLcrAaaoVEcAOmbogq
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
