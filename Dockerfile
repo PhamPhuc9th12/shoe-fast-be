@@ -17,5 +17,5 @@ RUN mvn clean package -Pprod -DskipTests
 FROM openjdk:17.0.1-jdk-slim
 COPY --from=build /target/shoe-fast-be-0.0.1-SNAPSHOT.jar shoe-be.jar
 EXPOSE 8086
-ENTRYPOINT ["java", "-jar", "/shoe-be.jar"]
+ENTRYPOINT ["java", "-jar", "shoe-be.jar"]
 
