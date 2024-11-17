@@ -17,11 +17,14 @@ import org.graduate.shoefastbe.repository.AccountRepository;
 import org.graduate.shoefastbe.util.MailUtil;
 import org.graduate.shoefastbe.validation.AccountValidationHelper;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -106,6 +109,21 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Long countAccount() {
         return accountRepository.count();
+    }
+
+    @Override
+    public Integer getTotalPage() {
+        return accountRepository.findAll(PageRequest.of(0,9)).getTotalPages();
+    }
+
+    @Override
+    public List<AccountResponse> findUserByRole(String roleName, Pageable pageable) {
+        return accountRepository.findAccountByRoleName(roleName,pageable);
+    }
+
+    @Override
+    public List<AccountResponse> findAllUser(Pageable pageable) {
+        return accountRepository.findAllAccount(pageable);
     }
 
     private AccountResponse getAccountDetail(Account account, Long id){

@@ -4,8 +4,10 @@ import org.graduate.shoefastbe.base.error_success_handle.SuccessResponse;
 import org.graduate.shoefastbe.dto.AccountCreateRequest;
 import org.graduate.shoefastbe.dto.account.*;
 import org.graduate.shoefastbe.entity.AccountDetail;
+import org.springframework.data.domain.Pageable;
 
 import javax.mail.MessagingException;
+import java.util.List;
 
 public interface AccountService {
     SuccessResponse singUp(AccountCreateRequest account);
@@ -15,4 +17,7 @@ public interface AccountService {
     AccountResponse getDetailById(Long id);
     AccountDetail updateProfile(AccountUpdateRequest accountUpdateRequest);
     Long countAccount();
+    Integer getTotalPage();
+    List<AccountResponse> findUserByRole(String roleName, Pageable pageable);
+    List<AccountResponse> findAllUser(Pageable pageable);
 }
