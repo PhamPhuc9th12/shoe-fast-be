@@ -19,4 +19,5 @@ public class ProductDtoResponse {
     private Long discount;
     private Boolean isActive;
     private Boolean liked;
+    private Double similarity;
 }

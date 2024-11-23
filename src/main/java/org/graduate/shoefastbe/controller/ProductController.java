@@ -10,6 +10,9 @@ import org.graduate.shoefastbe.dto.product.CreateProductRequest;
 import org.graduate.shoefastbe.dto.product.ProductDetailResponse;
 import org.graduate.shoefastbe.dto.product.ProductDtoRequest;
 import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
+import org.graduate.shoefastbe.entity.Product;
+import org.graduate.shoefastbe.repository.ProductRepository;
+import org.graduate.shoefastbe.service.RecommendationService;
 import org.graduate.shoefastbe.service.products.ProductService;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -28,6 +31,7 @@ import java.util.List;
 
 public class ProductController {
     private final ProductService productService;
+    private final RecommendationService recommendationService;
 
     @GetMapping("/get-all")
     @Operation(summary = "Lấy page product")
@@ -101,5 +105,10 @@ public class ProductController {
     @PostMapping("/modify")
     ProductDtoResponse update(@RequestParam CreateProductRequest createProductRequest) {
         return productService.update(createProductRequest);
+    }
+    @GetMapping("/recommendation")
+    public Page<ProductDtoResponse> getRecommendations(@RequestParam("id") Long productId,
+                                                       @ParameterObject Pageable pageable) throws IOException {
+        return recommendationService.getRecommendations(productId,pageable);
     }
 }
