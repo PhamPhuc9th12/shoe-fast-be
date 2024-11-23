@@ -75,5 +75,4 @@ public class AccountController {
     List<AccountResponse> getAllAccounts(@ParameterObject Pageable pageable){
         return accountService.findAllUser(pageable);
     }
-
 }

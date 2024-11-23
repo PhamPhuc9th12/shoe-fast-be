@@ -78,11 +78,11 @@ public class OrderServiceImpl implements OrderService {
               if (attribute.getStock() < orderDetail.getQuantity()) {
                   throw new RuntimeException("Sản phẩm đã hết hàng hoặc không đủ số lượng.");
               }
-              try {
-                  Thread.sleep(10000);
-              } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-              }
+//              try {
+//                  Thread.sleep(10000);
+//              } catch (InterruptedException e) {
+//                  throw new RuntimeException(e);
+//              }
               attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
               attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
 
@@ -116,7 +116,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        return orderMapper.getResponseByEntity(order);
+        OrderStatus orderStatus = orderStatusRepository.findById(order.getOrderStatusId())
+                .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+
+        OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+        orderDtoResponse.setOrderStatusName(orderStatus.getName());
+        return orderDtoResponse;
     }
 
     @Override

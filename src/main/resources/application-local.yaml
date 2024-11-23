@@ -38,15 +38,15 @@ spring:
 
   datasource:
     #    url: jdbc:postgresql://localhost:5432/shoe_store_v2
-    #    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com:5432/shoe_fast
-    ##    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a/shoe_fast
-    #    username: user_phuc
-    #    #    password: 09122002
-    #    password: Z1rzC30X31GMujuOTbyIWatN2uDF1Lca
+    #    username: postgres
+    #    password: 09122002
+    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com:5432/shoe_fast
+    username: user_phuc
+    password: Z1rzC30X31GMujuOTbyIWatN2uDF1Lca
 
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
+    #    url: ${DATABASE_URL}
+    #    username: ${DATABASE_USERNAME}
+    #    password: ${DATABASE_PASSWORD}
 
     driver-class-name: org.postgresql.Driver
     hikari:
