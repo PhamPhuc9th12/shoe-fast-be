@@ -191,7 +191,7 @@ public class OrderServiceImpl implements OrderService {
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("Đơn hàng đang được vận chuyển.");
+            throw new RuntimeException("Đơn hàng đang được vận chuyển");
         } else if (orderStatus.getName().equals(OrderStatusEnum.CANCELED.getValue())) {
             throw new RuntimeException("Đơn hàng đã được hủy.");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
