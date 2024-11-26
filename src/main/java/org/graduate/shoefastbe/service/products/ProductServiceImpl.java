@@ -105,6 +105,11 @@ public class ProductServiceImpl implements ProductService {
         Map<Long, Attribute> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
                 Attribute::getProductId, Function.identity()
         ));
+        Map<Long, Image> imageMap = imageRepository.findAllByProductIdIn(longProductEntityMap.values()
+                        .stream().map(Product::getId).collect(Collectors.toList()))
+                .stream().filter(image -> image.getName().equals("main"))
+                .collect(Collectors.toMap(Image::getProductId, Function.identity()));
+
         List<Brands> brandsEntities = brandsRepository.findAllByIdIn(longProductEntityMap.values()
                 .stream()
                 .map(Product::getBrandId )
@@ -132,7 +137,7 @@ public class ProductServiceImpl implements ProductService {
                             .code(product.getCode())
                             .view(product.getView())
                             .description(product.getDescription())
-                            .image(Common.DEFAULT_IMAGE)
+                            .image(imageMap.get(product.getId()).getImageLink())
                             .discount(salesEntityMap.get(product.getSaleId()).getDiscount())
                             .isActive(product.getIsActive())
                             .build();
