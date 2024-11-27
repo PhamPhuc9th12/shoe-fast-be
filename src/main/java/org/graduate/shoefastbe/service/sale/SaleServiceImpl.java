@@ -9,7 +9,9 @@ import org.graduate.shoefastbe.mapper.SaleMapper;
 import org.graduate.shoefastbe.repository.ProductRepository;
 import org.graduate.shoefastbe.repository.SalesRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +26,9 @@ public class SaleServiceImpl implements SaleService{
     private final ProductRepository productRepository;
     @Override
     public Page<SaleResponse> getAllSale(Pageable pageable) {
-
-        Page<Sales> entities = salesRepository.findAll(pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
+        Page<Sales> entities = salesRepository.findAll(sortedPageable);
         return entities.map(saleMapper::getResponseBy);
     }
 

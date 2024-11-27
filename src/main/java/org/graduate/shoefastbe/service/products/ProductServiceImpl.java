@@ -35,7 +35,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductAccountLikeMapRepository productAccountLikeMapRepository;
     @Override
     public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Order.asc("id")));
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
         if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
             return getProductDtoResponses(productEntities);
@@ -94,8 +95,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductDtoResponse> getAllProductFilter(ProductDtoRequest productDtoRequest, Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
         Page<Attribute> attributeEntities = customRepository.getAttributeFilter(productDtoRequest.getBrandIds(),
-                productDtoRequest.getCategoryIds(),productDtoRequest.getMin(),productDtoRequest.getMax(), pageable);
+                productDtoRequest.getCategoryIds(),productDtoRequest.getMin(),productDtoRequest.getMax(), sortedPageable);
         Map<Long, Product> longProductEntityMap = productRepository.findAllByIdIn(attributeEntities.stream()
                 .map(Attribute::getProductId).collect(Collectors.toSet()))
                 .stream()
@@ -195,7 +198,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductDtoResponse> getProductBySearch(String search, Pageable pageable) {
-        Page<Product> productEntities = productRepository.getProductBySearch(search,pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
+        Page<Product> productEntities = productRepository.getProductBySearch(search,sortedPageable);
         return getProductDtoResponses(productEntities);
     }
 
@@ -204,10 +209,12 @@ public class ProductServiceImpl implements ProductService {
         if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)) {
            throw new RuntimeException(CodeAndMessage.ERR10);
         }
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
         Long userId = TokenHelper.getUserIdFromToken(accessToken);
         List<ProductAccountLikeMap> productAccountLikeMaps = productAccountLikeMapRepository.findAllByAccountIdAndLiked(userId,Boolean.TRUE);
         Page<Product> products = productRepository.findAllByIdIn(productAccountLikeMaps.stream()
-                .map(ProductAccountLikeMap::getProductId).collect(Collectors.toList()), pageable);
+                .map(ProductAccountLikeMap::getProductId).collect(Collectors.toList()), sortedPageable);
         List<Product> productList = new ArrayList<>();
         for(Product p : products){
             if(p.getIsActive().equals(Boolean.TRUE)){
@@ -225,10 +232,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
         if(brandId == 0){
              return getAllProduct(pageable, null);
         }else{
-            Page<Product> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,pageable);
+            Page<Product> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,sortedPageable);
             return getProductDtoResponses(productEntities);
         }
     }

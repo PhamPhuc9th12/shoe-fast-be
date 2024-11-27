@@ -10,7 +10,9 @@ import org.graduate.shoefastbe.mapper.BrandsMapper;
 import org.graduate.shoefastbe.repository.BrandsRepository;
 import org.graduate.shoefastbe.repository.ProductRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +30,9 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public Page<BrandResponse> getAllBrand(Pageable pageable) {
-        Page<Brands> brandsEntities = brandsRepository.findAll(pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
+        Page<Brands> brandsEntities = brandsRepository.findAll(sortedPageable);
         return brandsEntities.map(brandsMapper::getResponseBy);
     }
 

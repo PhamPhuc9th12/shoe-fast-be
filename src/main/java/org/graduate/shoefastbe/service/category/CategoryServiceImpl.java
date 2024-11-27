@@ -10,7 +10,9 @@ import org.graduate.shoefastbe.mapper.CategoryMapper;
 import org.graduate.shoefastbe.repository.CategoryRepository;
 import org.graduate.shoefastbe.repository.ProductRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,9 @@ public class CategoryServiceImpl implements CategoryService {
     private final ProductRepository productRepository;
     @Override
     public Page<CategoryResponse> getAllCategory(Pageable pageable) {
-        Page<Category> entities = categoryRepository.findAll(pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
+        Page<Category> entities = categoryRepository.findAll(sortedPageable);
         return entities.map(categoryMapper::getResponseBy);
     }
 

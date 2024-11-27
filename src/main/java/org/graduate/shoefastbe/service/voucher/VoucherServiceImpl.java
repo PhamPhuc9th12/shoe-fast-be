@@ -9,7 +9,9 @@ import org.graduate.shoefastbe.entity.Voucher;
 import org.graduate.shoefastbe.mapper.VoucherMapper;
 import org.graduate.shoefastbe.repository.VoucherRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +47,9 @@ public class VoucherServiceImpl implements VoucherService{
 
     @Override
     public Page<VoucherDtoResponse> getAllVoucher(Pageable pageable) {
-        Page<Voucher> vouchers =  voucherRepository.findAll(pageable);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
+        Page<Voucher> vouchers =  voucherRepository.findAll(sortedPageable);
         return vouchers.map(voucherMapper::getResponseByEntity);
     }
 
