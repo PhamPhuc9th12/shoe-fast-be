@@ -1,6 +1,6 @@
 package org.graduate.shoefastbe.service.order;
 
-import jakarta.persistence.OptimisticLockException;
+import javax.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
@@ -329,7 +329,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<ProductReport> sortedReports = productReports.stream()
                 .sorted(Comparator.comparing(ProductReport::getId))
-                .toList();
+                .collect(Collectors.toList());
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), sortedReports.size());
         List<ProductReport> paginatedReports = sortedReports.subList(start, end);

@@ -62,3 +62,23 @@ spring:
           auth: true
           starttls:
             enable: true
+
+#payment:
+#  vnPay:
+#    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+#    tmnCode: 58X4B4HP
+#    secretKey: VRLDWNVWDNPCOEPBZUTWSEDQAGXJCNGZ
+#    returnUrl: http://localhost:8086/api/v1/payment/vn-pay-callback
+#    version: 2.1.0
+#    command: pay
+#    orderType: other
+
+payment:
+  vnPay:
+    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    tmnCode: 6ZQGUWLR
+    secretKey: 20HPEU8G4XNP6PG27ETDRAR2WYPRYKP3
+    returnUrl: http://localhost:8086/api/v1/payment/vn-pay-callback
+    version: 2.1.0
+    command: pay
+    orderType: other

@@ -2,7 +2,7 @@ package org.graduate.shoefastbe.entity;
 
 import lombok.*;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

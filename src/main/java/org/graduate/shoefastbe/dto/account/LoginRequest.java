@@ -2,7 +2,7 @@ package org.graduate.shoefastbe.dto.account;
 
 import lombok.*;
 
-import jakarta.validation.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 @AllArgsConstructor
 @NoArgsConstructor

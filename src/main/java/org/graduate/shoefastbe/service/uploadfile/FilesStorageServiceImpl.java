@@ -1,6 +1,6 @@
 package org.graduate.shoefastbe.service.uploadfile;
 
-import jakarta.servlet.ServletContext;
+import javax.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;

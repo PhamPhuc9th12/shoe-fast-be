@@ -1,6 +1,6 @@
 package org.graduate.shoefastbe.entity;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 

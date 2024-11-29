@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;

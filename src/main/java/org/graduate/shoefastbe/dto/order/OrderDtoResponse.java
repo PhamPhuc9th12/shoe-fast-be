@@ -2,7 +2,7 @@ package org.graduate.shoefastbe.dto.order;
 
 import lombok.*;
 
-import jakarta.persistence.Column;
+import javax.persistence.Column;
 import java.time.LocalDate;
 import java.util.Date;
 

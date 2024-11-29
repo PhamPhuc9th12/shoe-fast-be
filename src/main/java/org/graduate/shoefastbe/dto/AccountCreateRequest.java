@@ -3,8 +3,8 @@ package org.graduate.shoefastbe.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @AllArgsConstructor
