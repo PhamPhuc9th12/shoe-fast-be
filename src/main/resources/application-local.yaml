@@ -37,12 +37,12 @@ spring:
       hibernate.format_sql: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/shoe_store_v2
-    username: postgres
-    password: 09122002
-    #    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com:5432/shoe_fast
-    #    username: user_phuc
-    #    password: Z1rzC30X31GMujuOTbyIWatN2uDF1Lca
+#    url: jdbc:postgresql://localhost:5432/shoe_store_v2
+#    username: postgres
+#    password: 09122002
+    url: jdbc:postgresql://dpg-cssc2uogph6c73947tmg-a.oregon-postgres.render.com:5432/shoe_fast
+    username: user_phuc
+    password: Z1rzC30X31GMujuOTbyIWatN2uDF1Lca
 
     #    url: ${DATABASE_URL}
     #    username: ${DATABASE_USERNAME}

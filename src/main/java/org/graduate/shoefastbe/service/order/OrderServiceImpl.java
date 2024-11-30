@@ -77,11 +77,6 @@ public class OrderServiceImpl implements OrderService {
                 if (attribute.getStock() < orderDetail.getQuantity()) {
                     throw new RuntimeException("Sản phẩm đã hết hàng hoặc không đủ số lượng.");
                 }
-//              try {
-//                  Thread.sleep(10000);
-//              } catch (InterruptedException e) {
-//                  throw new RuntimeException(e);
-//              }
                 attribute.setStock(attribute.getStock() - orderDetail.getQuantity());
                 attribute.setCache(attribute.getCache() + orderDetail.getQuantity());
 
