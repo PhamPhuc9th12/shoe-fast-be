@@ -36,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Direction.DESC, "createDate"));
         if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
             return getProductDtoResponses(productEntities);

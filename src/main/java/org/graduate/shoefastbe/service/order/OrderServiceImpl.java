@@ -546,17 +546,17 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDtoResponse> getPage(Long id, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Direction.DESC, "createDate"));
         if (id != 0L) {
             OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
             if (orderStatus == null) {
-                return orderRepository.findAll(sortedPageable).map(orderMapper::getResponseByEntity);
+                return orderRepository.findAllByOrderByCreateDateDesc(sortedPageable).map(orderMapper::getResponseByEntity);
             }
             return orderRepository.findAllByOrderStatusId(id, sortedPageable).map(orderMapper::getResponseByEntity);
         } else {
-            Page<Order> orders = orderRepository.findAll(sortedPageable);
+            Page<Order> orders = orderRepository.findAllByOrderByCreateDateDesc(sortedPageable);
             return orders.map(orderMapper::getResponseByEntity);
         }
     }
@@ -564,7 +564,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDtoResponse> getOrderBetweenDate(Long id, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Direction.DESC, "createDate"));
         if (id.equals(0L)) {
             return orderRepository.findOrderBetweenDate(fromDate, toDate, sortedPageable).map(orderMapper::getResponseByEntity);
         }
