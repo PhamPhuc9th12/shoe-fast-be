@@ -41,6 +41,13 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public SuccessResponse singUp(AccountCreateRequest account) {
         accountValidationHelper.signUpValidate(account);
+        validatePassword(account.getPassword());
+        if(accountRepository.existsByUsername(account.getUsername())){
+            throw new RuntimeException("User name is exist!");
+        }
+        if(accountDetailRepository.existsByEmail(account.getEmail())){
+            throw new RuntimeException("Email is exist!!");
+        }
         Account accountEntity = accountMapper.getEntityFromRequest(account);
         accountEntity.setPassword(BCrypt.hashpw(account.getPassword(), BCrypt.gensalt()));
         accountEntity.setIsActive(Boolean.TRUE);
@@ -54,6 +61,35 @@ public class AccountServiceImpl implements AccountService {
         return SuccessHandle.success(CodeAndMessage.ME106);
     }
 
+    public void validatePassword(String password) {
+        if (!isValidPassword(password)) {
+            throw new IllegalArgumentException("Mật khẩu có ít nhất 8 ký tự bao gồm chữ hoa, chữ thường và ký tự đặc biệt!");
+        }
+    }
+
+    private boolean isValidPassword(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        boolean hasUpperCase = false;
+        boolean hasLowerCase = false;
+        boolean hasDigit = false;
+        boolean hasSpecialChar = false;
+
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                hasUpperCase = true;
+            } else if (Character.isLowerCase(c)) {
+                hasLowerCase = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else if (!Character.isLetterOrDigit(c)) {
+                hasSpecialChar = true;
+            }
+        }
+
+        return hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
+    }
     @Override
     public TokenAndRole login(LoginRequest loginRequest) {
         Account userEntity = accountRepository.findByUsername(loginRequest.getUsername());

@@ -1,6 +1,8 @@
 package org.graduate.shoefastbe.entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.Pattern;
+
 import lombok.*;
 import java.time.LocalDate;
 

@@ -149,8 +149,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<OrderDtoResponse> getAllOrders(Long accountId, Long orderStatusId, Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
         if (orderStatusId == 0) {
-            Page<OrderDtoResponse> orderEntities = orderRepository.findAllByAccountId(accountId, pageable).map(orderMapper::getResponseByEntity);
+            Page<OrderDtoResponse> orderEntities = orderRepository.findAllByAccountId(accountId, sortedPageable).map(orderMapper::getResponseByEntity);
             List<OrderStatus> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
             Map<Long, OrderStatus> orderStatusEntityMap = orderStatusEntities.stream()
                     .collect(Collectors.toMap(OrderStatus::getId, Function.identity()));
@@ -162,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
             );
 
         }
-        Page<Order> orderEntityList = orderRepository.findAllByAccountIdAndOrderStatusId(accountId, orderStatusId, pageable);
+        Page<Order> orderEntityList = orderRepository.findAllByAccountIdAndOrderStatusId(accountId, orderStatusId, sortedPageable);
         Page<OrderDtoResponse> orderEntities = orderEntityList.map(orderMapper::getResponseByEntity);
         List<OrderStatus> orderStatusEntities = orderStatusRepository.findAllByIdIn(orderEntities.stream().map(OrderDtoResponse::getOrderStatusId).collect(Collectors.toList()));
         Map<Long, OrderStatus> orderStatusEntityMap = orderStatusEntities.stream()
@@ -335,10 +337,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDtoResponse> getOrderByYearAndMonth(Long id, Long year, Long month, Pageable pageable) {
         Page<Order> orders;
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
+
         if (id == 0L) {
-            orders = orderRepository.findOrderByYearAndMonth(Math.toIntExact(year), Math.toIntExact(month), pageable);
+            orders = orderRepository.findOrderByYearAndMonth(Math.toIntExact(year), Math.toIntExact(month), sortedPageable);
         } else {
-            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id, Math.toIntExact(year), Math.toIntExact(month), pageable);
+            orders = orderRepository.findOrderByOrderStatusAndYearAndMonth(id, Math.toIntExact(year), Math.toIntExact(month), sortedPageable);
         }
         return orders.map(orderMapper::getResponseByEntity);
     }
@@ -346,7 +351,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderDtoResponse> getOrderByProduct(Long id, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
         Page<Order> orders = orderRepository.findOrderByProduct(id, sortedPageable);
         return orders.map(orderMapper::getResponseByEntity);
     }

@@ -9,7 +9,11 @@ import org.graduate.shoefastbe.dto.account.*;
 import org.graduate.shoefastbe.entity.AccountDetail;
 import org.graduate.shoefastbe.service.account.AccountService;
 import org.springdoc.api.annotations.ParameterObject;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
@@ -17,6 +21,7 @@ import javax.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -27,7 +32,13 @@ public class AccountController {
 
     @PostMapping("/create")
     @Operation(summary = "Đăng ký tài khoản")
-    SuccessResponse singUp(@RequestBody @Valid AccountCreateRequest accountCreateRequest){
+    SuccessResponse singUp(@RequestBody @Valid AccountCreateRequest accountCreateRequest, BindingResult result){
+        if (result.hasErrors()) {
+            String errorMessage = result.getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.joining(", "));
+            return new SuccessResponse("failed",errorMessage);
+        }
         return accountService.singUp(accountCreateRequest);
     }
     @PostMapping("/login")
