@@ -68,6 +68,10 @@ public class AccountController {
     }
 
     //admin
+    @PostMapping("/admin/create")
+    AccountResponse createAccount(@RequestBody AccountCreateRequest accountCreateRequest ){
+        return accountService.createAccount(accountCreateRequest);
+    }
     @GetMapping("/admin/count")
     @Operation(summary = "Số lượng tài khoản")
     Long countAccount(){

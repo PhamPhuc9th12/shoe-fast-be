@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.dto.product;
 
 import lombok.*;
+import org.graduate.shoefastbe.common.IdAndName;
 import org.graduate.shoefastbe.entity.Attribute;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class ProductDetailResponse {
     private List<String> images;
     private List<Attribute> attributes;
     private List<Long> categoryIds;
+    private List<IdAndName> categories;
     private Long saleId;
     private Long brandId;
     private String brand;

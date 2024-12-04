@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.authen.TokenHelper;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.Common;
+import org.graduate.shoefastbe.common.IdAndName;
 import org.graduate.shoefastbe.common.cloudinary.CloudinaryHelper;
 import org.graduate.shoefastbe.dto.category.AttributeDtoRequest;
 import org.graduate.shoefastbe.dto.product.*;
@@ -33,6 +34,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductAccountLikeMapRepository productAccountLikeMapRepository;
+    private final CategoryRepository categoryRepository;
     @Override
     public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
@@ -161,6 +163,8 @@ public class ProductServiceImpl implements ProductService {
             }
         }
         List<ProductCategory> categoryEntities = productCategoryRepository.findAllByProductId(productId);
+        List<Category> categories = categoryRepository.findAllByIdIn(categoryEntities.stream().map(ProductCategory::getCategoryId).collect(Collectors.toList()));
+        List<IdAndName> categoryIdName = categories.stream().map(category -> IdAndName.builder().id(category.getId()).name(category.getName()).build()).collect(Collectors.toList());
         Brands brands = brandsRepository.findById(product.getBrandId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
@@ -181,6 +185,7 @@ public class ProductServiceImpl implements ProductService {
                 .images(imgURLs)
                 .saleId(product.getSaleId())
                 .brand(brands.getName())
+                .categories(categoryIdName)
                 .code(product.getCode())
                 .description(product.getDescription())
                 .discount(sales.getDiscount())

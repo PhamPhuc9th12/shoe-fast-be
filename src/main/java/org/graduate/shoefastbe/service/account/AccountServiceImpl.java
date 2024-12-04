@@ -143,6 +143,27 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
+    public AccountResponse createAccount(AccountCreateRequest accountCreateRequest) {
+        if (Boolean.TRUE.equals(accountRepository.existsByUsername(accountCreateRequest.getUsername()))) {
+            throw new RuntimeException("Username đã tồn tại");
+        }
+        if (Boolean.TRUE.equals(accountRepository.existsByUsername(accountCreateRequest.getEmail()))){
+            throw new RuntimeException("Email đã tồn tại");
+        }
+        Account account = accountMapper.getEntityFromRequest(accountCreateRequest);
+        account.setRole(RoleEnums.CUSTOMER.name());
+        account.setIsActive(Boolean.TRUE);
+        account.setCreateDate(LocalDate.now());
+        account.setModifyDate(LocalDate.now());
+        accountRepository.save(account);
+        AccountDetail accountDetail = accountDetailMapper.getEntityFromRequest(accountCreateRequest);
+        accountDetail.setAccountId(account.getId());
+        accountDetailRepository.save(accountDetail);
+        return getAccountDetail(account,account.getId());
+    }
+
+    @Override
     public Long countAccount() {
         return accountRepository.count();
     }

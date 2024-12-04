@@ -26,9 +26,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/product")
-@CrossOrigin
+@CrossOrigin("*")
 @AllArgsConstructor
-
 public class ProductController {
     private final ProductService productService;
     private final RecommendationService recommendationService;
@@ -103,7 +102,7 @@ public class ProductController {
 
 
     @PostMapping("/modify")
-    ProductDtoResponse update(@RequestParam CreateProductRequest createProductRequest) {
+    ProductDtoResponse update(@RequestBody CreateProductRequest createProductRequest) {
         return productService.update(createProductRequest);
     }
     @GetMapping("/recommendation")
