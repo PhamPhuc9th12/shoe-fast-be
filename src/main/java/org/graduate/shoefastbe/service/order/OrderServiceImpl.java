@@ -1,6 +1,7 @@
 package org.graduate.shoefastbe.service.order;
 
 import javax.persistence.OptimisticLockException;
+
 import lombok.AllArgsConstructor;
 import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.common.enums.OrderStatusEnum;
@@ -555,6 +556,18 @@ public class OrderServiceImpl implements OrderService {
                 return orderRepository.findAllByOrderByCreateDateDesc(sortedPageable).map(orderMapper::getResponseByEntity);
             }
             return orderRepository.findAllByOrderStatusId(id, sortedPageable).map(orderMapper::getResponseByEntity);
+        } else {
+            Page<Order> orders = orderRepository.findAllByOrderByCreateDateDesc(sortedPageable);
+            return orders.map(orderMapper::getResponseByEntity);
+        }
+    }
+
+    @Override
+    public Page<OrderDtoResponse> getOrderByPayment(String payment, Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createDate"));
+        if (Objects.nonNull(payment)) {
+            return orderRepository.findAllByPayment(payment, sortedPageable).map(orderMapper::getResponseByEntity);
         } else {
             Page<Order> orders = orderRepository.findAllByOrderByCreateDateDesc(sortedPageable);
             return orders.map(orderMapper::getResponseByEntity);
