@@ -31,6 +31,7 @@ public class OrderDtoResponse {
     private Boolean seen;
     private Long accountId;
     private Long voucherId;
+    private Long discount;
     private Long orderStatusId;
     private String orderStatusName;
 }

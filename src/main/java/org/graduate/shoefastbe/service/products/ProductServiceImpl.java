@@ -38,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createDate"));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
             return getProductDtoResponses(productEntities);
@@ -98,7 +98,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getAllProductFilter(ProductDtoRequest productDtoRequest, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         Page<Attribute> attributeEntities = customRepository.getAttributeFilter(productDtoRequest.getBrandIds(),
                 productDtoRequest.getCategoryIds(),productDtoRequest.getMin(),productDtoRequest.getMax(), sortedPageable);
         Map<Long, Product> longProductEntityMap = productRepository.findAllByIdIn(attributeEntities.stream()
@@ -204,7 +204,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getProductBySearch(String search, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         Page<Product> productEntities = productRepository.getProductBySearch(search,sortedPageable);
         return getProductDtoResponses(productEntities);
     }
@@ -215,7 +215,7 @@ public class ProductServiceImpl implements ProductService {
            throw new RuntimeException(CodeAndMessage.ERR10);
         }
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         Long userId = TokenHelper.getUserIdFromToken(accessToken);
         List<ProductAccountLikeMap> productAccountLikeMaps = productAccountLikeMapRepository.findAllByAccountIdAndLiked(userId,Boolean.TRUE);
         Page<Product> products = productRepository.findAllByIdIn(productAccountLikeMaps.stream()
@@ -238,7 +238,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.asc("id")));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         if(brandId == 0){
              return getAllProduct(pageable, null);
         }else{

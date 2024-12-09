@@ -131,10 +131,16 @@ public class OrderController {
     }
 
     @GetMapping("/page-admin")
-    Page<OrderDtoResponse> getPage(@RequestParam(required = false) Long status, @ParameterObject Pageable pageable) {
-        return orderService.getPage(status, pageable);
+    Page<OrderDtoResponse> getPage(@RequestParam(required = false) Long status,
+                                   @RequestParam(required = false) String payment,
+                                   @ParameterObject Pageable pageable) {
+        return orderService.getPage(status,payment, pageable);
     }
-
+    @GetMapping("/payment")
+    Page<OrderDtoResponse> getOrderByPayment(@RequestParam(required = false) String payment,
+                                             @ParameterObject Pageable pageable) {
+        return orderService.getOrderByPayment(payment, pageable);
+    }
     @GetMapping("/admin/page-orders-between-date")
     Page<OrderDtoResponse> getOrderBetweenDate(@RequestParam Long id,
                                                @RequestParam String from,

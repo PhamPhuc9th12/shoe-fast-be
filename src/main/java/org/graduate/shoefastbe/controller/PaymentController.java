@@ -33,7 +33,6 @@ public class PaymentController {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
 
         if (order != null) {
-            order.setIsPending(Boolean.TRUE);
             order.setPayment("Thanh toán khi giao hàng(COD)");
             orderRepository.save(order);
             return new ResponseEntity<>("Success", HttpStatus.OK);
@@ -52,9 +51,10 @@ public class PaymentController {
             if (order != null) {
                 order.setIsPending(Boolean.TRUE);
                 order.setPayment("CHUYỂN KHOẢN QUA VNPAY");
+                order.setOrderStatusId(2L);
                 orderRepository.save(order);
                 response.sendRedirect("http://localhost:3000/order/detail/" + orderId);
-                response.sendRedirect("https://shoe-fast-fe.onrender.com/order/detail/" + orderId);
+//                response.sendRedirect("https://shoe-fast-fe.onrender.com/order/detail/" + orderId);
             }
         } else {
             response.sendRedirect("http://localhost:3000/");

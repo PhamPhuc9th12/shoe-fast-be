@@ -54,9 +54,17 @@ public class VoucherServiceImpl implements VoucherService{
     }
 
     @Override
+    @Transactional
     public VoucherDtoResponse create(Voucher voucher) {
-         Voucher voucher1 = voucherRepository.save(voucher);
-         voucher1.setCreateDate(LocalDate.now());
+         Voucher voucher1 = Voucher.builder()
+                 .code(voucher.getCode())
+                 .count(voucher.getCount())
+                 .isActive(Boolean.TRUE)
+                 .discount(voucher.getDiscount())
+                 .expireDate(voucher.getExpireDate())
+                 .createDate(LocalDate.now())
+                 .build();
+         voucherRepository.save(voucher1);
         return voucherMapper.getResponseByEntity(voucher1);
     }
 
@@ -69,6 +77,7 @@ public class VoucherServiceImpl implements VoucherService{
     }
 
     @Override
+    @Transactional
     public VoucherDtoResponse update(Voucher voucher) {
         Voucher vou = voucherRepository.findById(voucher.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)

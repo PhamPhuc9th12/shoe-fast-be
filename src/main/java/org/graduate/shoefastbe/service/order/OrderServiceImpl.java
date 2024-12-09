@@ -115,30 +115,53 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
 
         OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+        Voucher voucher = new Voucher();
+        if(Objects.nonNull(order.getVoucherId())){
+             voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+        }
         orderDtoResponse.setOrderStatusName(orderStatus.getName());
+        orderDtoResponse.setDiscount(voucher.getDiscount());
         return orderDtoResponse;
     }
 
     @Override
     public List<OrderDetailResponse> getOrderDetail(Long orderId) {
         List<OrderDetail> orderDetailEntities = orderDetailRepository.findAllByOrderId(orderId);
+        Order order = orderRepository.findById(orderId).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
         List<Attribute> attributeEntities = attributeRepository.findAllByIdIn(orderDetailEntities
                 .stream()
                 .map(OrderDetail::getAttributeId)
                 .collect(Collectors.toList()));
+        List<Product> productList = productRepository.findAllByIdIn(attributeEntities.stream().map(Attribute::getProductId).collect(Collectors.toList()));
+        Map<Long, Image> imageMap = imageRepository.findAllByProductIdIn(productList.stream().map(Product::getId).collect(Collectors.toList()))
+                .stream()
+                .filter(image -> image.getName().equals("main"))
+                .collect(Collectors.toMap(Image::getProductId, Function.identity()));
+
         Map<Long, Attribute> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
                 Attribute::getId, Function.identity()
         ));
+        Map<Long, Voucher> voucherMap = new HashMap<>();
+        if(Objects.nonNull(order.getVoucherId())){
+            Voucher voucher= voucherRepository.findById(order.getVoucherId()).orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+            voucherMap.put(voucher.getId(), voucher);
+        }
         return orderDetailEntities.stream().map(
                 orderDetailEntity -> OrderDetailResponse
                         .builder()
                         .id(orderDetailEntity.getId())
                         .quantity(orderDetailEntity.getQuantity())
+                        .image(imageMap.get(attributeMap.get(orderDetailEntity.getAttributeId()).getProductId()).getImageLink())
                         .sellPrice(orderDetailEntity.getSellPrice())
                         .originPrice(orderDetailEntity.getOriginPrice())
                         .orderId(orderDetailEntity.getOrderId())
                         .attributeSize(attributeMap.get(orderDetailEntity.getAttributeId()).getSize())
                         .attribute(attributeMapper.getResponseFromEntity(attributeMap.get(orderDetailEntity.getAttributeId())))
+                        .orderStatusName(orderStatusRepository.findById(order.getOrderStatusId()).orElseThrow(() ->
+                                new RuntimeException(CodeAndMessage.ERR3)).getName())
+                        .discount(Objects.nonNull(voucherMap.get(order.getVoucherId()))? voucherMap.get(order.getVoucherId()).getDiscount(): null)
                         .build()
         ).collect(Collectors.toList());
     }
@@ -188,11 +211,11 @@ public class OrderServiceImpl implements OrderService {
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("Đơn hàng đang được vận chuyển");
+            throw new RuntimeException("Đơn hàng đang được vận chuyển,không thể hủy ");
         } else if (orderStatus.getName().equals(OrderStatusEnum.CANCELED.getValue())) {
             throw new RuntimeException("Đơn hàng đã được hủy.");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("Đơn hàng đã được giao thành công.");
+            throw new RuntimeException("Đơn hàng đã được giao thành công, không thể hủy");
         }
         OrderStatus orderStatusCancel = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
         order.setOrderStatusId(orderStatusCancel.getId());
@@ -354,7 +377,12 @@ public class OrderServiceImpl implements OrderService {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
         Page<Order> orders = orderRepository.findOrderByProduct(id, sortedPageable);
-        return orders.map(orderMapper::getResponseByEntity);
+        return orders.map(order -> {
+            OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+            OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                    .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+            orderDtoResponse.setOrderStatusName(orderStatus.getName());
+            return orderDtoResponse;});
     }
 
     @Override
@@ -545,43 +573,85 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Page<OrderDtoResponse> getPage(Long id, Pageable pageable) {
+    public Page<OrderDtoResponse> getPage(Long id,String payment, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createDate"));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         if (id != 0L) {
             OrderStatus orderStatus = orderStatusRepository.findById(id).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
             if (orderStatus == null) {
-                return orderRepository.findAllByOrderByCreateDateDesc(sortedPageable).map(orderMapper::getResponseByEntity);
+                return orderRepository.findAllByPayment(payment,sortedPageable).map(orderMapper::getResponseByEntity);
             }
-            return orderRepository.findAllByOrderStatusId(id, sortedPageable).map(orderMapper::getResponseByEntity);
+            if(Objects.nonNull(payment) && !payment.isEmpty()&& !payment.equals("null")){
+                return orderRepository.findAllByOrderStatusIdAndPayment(id,payment, sortedPageable).map(orderMapper::getResponseByEntity);
+            }else{
+                return orderRepository.findAllByOrderStatusId(id, sortedPageable).map(orderMapper::getResponseByEntity);
+            }
         } else {
-            Page<Order> orders = orderRepository.findAllByOrderByCreateDateDesc(sortedPageable);
-            return orders.map(orderMapper::getResponseByEntity);
+           if(Objects.nonNull(payment) && !payment.isEmpty() && !payment.equals("null")){
+               Page<Order> orders = orderRepository.findAllByPayment(payment,sortedPageable);
+               return orders.map(order -> {
+                   OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+                   OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                           .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+                   orderDtoResponse.setOrderStatusName(orderStatus.getName());
+                   return orderDtoResponse;});
+           }else{
+               Page<Order> orders = orderRepository.findAll(sortedPageable);
+               return orders.map(order -> {
+                   OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+                   OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                           .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+                   orderDtoResponse.setOrderStatusName(orderStatus.getName());
+                   return orderDtoResponse;});
+           }
         }
     }
 
     @Override
     public Page<OrderDtoResponse> getOrderByPayment(String payment, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createDate"));
-        if (Objects.nonNull(payment)) {
-            return orderRepository.findAllByPayment(payment, sortedPageable).map(orderMapper::getResponseByEntity);
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
+        if (Objects.nonNull(payment) && !payment.equals("null")) {
+            return orderRepository.findAllByPayment(payment, sortedPageable).map(order -> {
+                OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+                OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                        .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+                orderDtoResponse.setOrderStatusName(orderStatus.getName());
+                return orderDtoResponse;});
         } else {
             Page<Order> orders = orderRepository.findAllByOrderByCreateDateDesc(sortedPageable);
-            return orders.map(orderMapper::getResponseByEntity);
+            return orders.map(order -> {
+                OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+                OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                        .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+                orderDtoResponse.setOrderStatusName(orderStatus.getName());
+                return orderDtoResponse;
+            });
         }
     }
 
     @Override
     public Page<OrderDtoResponse> getOrderBetweenDate(Long id, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "createDate"));
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         if (id.equals(0L)) {
-            return orderRepository.findOrderBetweenDate(fromDate, toDate, sortedPageable).map(orderMapper::getResponseByEntity);
+            return orderRepository.findOrderBetweenDate(fromDate, toDate, sortedPageable).map(order -> {
+                OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+                OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                        .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+                orderDtoResponse.setOrderStatusName(orderStatus.getName());
+                return orderDtoResponse;});
         }
-        return orderRepository.findOrderByOrderStatusBetweenDate(id, fromDate, toDate, sortedPageable).map(orderMapper::getResponseByEntity);
+        return orderRepository.findOrderByOrderStatusBetweenDate(id, fromDate, toDate, sortedPageable).map(
+                order -> {
+                    OrderDtoResponse orderDtoResponse = orderMapper.getResponseByEntity(order);
+                    OrderStatus orderStatus = orderStatusRepository.findById(orderDtoResponse.getOrderStatusId())
+                            .orElseThrow(() -> new RuntimeException(CodeAndMessage.ERR3));
+                    orderDtoResponse.setOrderStatusName(orderStatus.getName());
+                    return orderDtoResponse;}
+        );
     }
 
     private void sendNotification(Order order) {

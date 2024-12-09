@@ -18,9 +18,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllByAccountIdAndOrderStatusId(Long accountId, Long orderStatusId, Pageable pageable);
     Page<Order> findAllByOrderByCreateDateDesc(Pageable pageable);
     Page<Order> findAllByPayment(String payment,Pageable pageable);
-
-    List<Order> findAllByOrderStatusId(Long orderStatusId);
     Page<Order> findAllByOrderStatusId(Long orderStatusId, Pageable pageable);
+    List<Order> findAllByOrderStatusId(Long orderStatusId);
+    Page<Order> findAllByOrderStatusIdAndPayment(Long orderStatusId,String payment, Pageable pageable);
 
     @Query("SELECT o FROM Order o WHERE year(o.createDate) = :year and month(o.createDate) = :month")
     Page<Order> findOrderByYearAndMonth(@Param("year") Integer year, @Param("month") Integer month, Pageable pageable);
