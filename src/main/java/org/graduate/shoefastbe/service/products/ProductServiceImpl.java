@@ -40,6 +40,29 @@ public class ProductServiceImpl implements ProductService {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
+            Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
+            return getProductDtoResponses(productEntities);
+        }else{
+            Long userId = TokenHelper.getUserIdFromToken(accessToken);
+            Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
+
+            Map<Long, Boolean> likeMap = productAccountLikeMapRepository.findAllByAccountId(userId)
+                    .stream().collect(Collectors.toMap(ProductAccountLikeMap::getProductId, ProductAccountLikeMap::getLiked));
+            Page<ProductDtoResponse> productDtoResponses =  getProductDtoResponses(productEntities);
+            productDtoResponses.forEach(
+                    productDtoResponse -> {
+                        Boolean liked = likeMap.get(productDtoResponse.getId());
+                        productDtoResponse.setLiked(Objects.isNull(liked)? Boolean.FALSE : liked);
+                    }
+            );
+            return productDtoResponses;
+        }
+    }
+
+    public Page<ProductDtoResponse> getAllProductForBrand(Pageable pageable, String accessToken) {
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
+        if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
             return getProductDtoResponses(productEntities);
         }else{
@@ -192,6 +215,7 @@ public class ProductServiceImpl implements ProductService {
                 .id(productId)
                 .name(product.getName())
                 .view(product.getView())
+                .isActive(product.getIsActive())
                 .build();
     }
 
@@ -240,9 +264,9 @@ public class ProductServiceImpl implements ProductService {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
         if(brandId == 0){
-             return getAllProduct(pageable, null);
+             return getAllProductForBrand(pageable, null);
         }else{
-            Page<Product> productEntities = productRepository.findAllByBrandIdAndIsActive(brandId,Boolean.TRUE,sortedPageable);
+            Page<Product> productEntities = productRepository.findAllByBrandId(brandId,sortedPageable);
             return getProductDtoResponses(productEntities);
         }
     }
@@ -326,13 +350,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductDtoResponse update(CreateProductRequest createProductRequest) {
         Product productEntity = productRepository.findById(createProductRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         productMapper.update(productEntity, createProductRequest);
         productEntity.setView(1L);
-        productEntity.setIsActive(Boolean.TRUE);
+        productEntity.setIsActive(createProductRequest.getIsActive());
         productRepository.save(productEntity);
 
         List<Long> categoryIds = createProductRequest.getCategoryId();

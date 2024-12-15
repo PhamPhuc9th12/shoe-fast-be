@@ -31,10 +31,17 @@ public class CategoryServiceImpl implements CategoryService {
     public Page<CategoryResponse> getAllCategory(Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Order.asc("id")));
-        Page<Category> entities = categoryRepository.findAll(sortedPageable);
+        Page<Category> entities = categoryRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
         return entities.map(categoryMapper::getResponseBy);
     }
 
+    @Override
+    public Page<CategoryResponse> getAllCategoryAdmin(Pageable pageable) {
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("id")));
+        Page<Category> entities = categoryRepository.findAll(sortedPageable);
+        return entities.map(categoryMapper::getResponseBy);
+    }
     @Override
     public CategoryResponse create(CategoryRequest categoryRequest) {
         Category category = categoryMapper.getEntityBy(categoryRequest);

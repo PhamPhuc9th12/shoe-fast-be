@@ -27,7 +27,7 @@ public class SaleController {
     SaleResponse getDetailSale(@RequestParam Long id){
         return saleService.getDetailSale(id);
     }
-    @PutMapping("/update")
+    @PostMapping("/update")
     SaleResponse update(@RequestBody SaleResponse saleResponse){
         return saleService.update(saleResponse);
     }

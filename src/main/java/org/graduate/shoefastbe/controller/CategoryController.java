@@ -20,6 +20,10 @@ public class CategoryController {
     public Page<CategoryResponse> getAllCategory(@ParameterObject Pageable pageable){
         return categoryService.getAllCategory(pageable);
     }
+    @GetMapping("/list-admin")
+    public Page<CategoryResponse> getAllCategoryAdmin(@ParameterObject Pageable pageable){
+        return categoryService.getAllCategoryAdmin(pageable);
+    }
     @PostMapping("/create")
     public CategoryResponse create(@RequestBody CategoryRequest categoryRequest){
         return categoryService.create(categoryRequest);
@@ -30,7 +34,7 @@ public class CategoryController {
         return categoryService.update(categoryRequest);
     }
 
-    @PostMapping("/detail")
+    @GetMapping("/detail")
     public CategoryResponse getDetail(@RequestParam Long id){
         return categoryService.getDetail(id);
     }

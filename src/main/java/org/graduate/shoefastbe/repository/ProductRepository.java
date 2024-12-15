@@ -15,6 +15,7 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByBrandIdIn(Collection<Long> brandIds);
     Page<Product> findAllByIsActive(Boolean isActive, Pageable pageable);
+    Page<Product> findAllByBrandId(Long brandId, Pageable pageable);
     List<Product> findAllByIdIn(Collection<Long> productIds);
     Page<Product> findAllByIdIn(Collection<Long> productIds,Pageable pageable);
     Product findByCode(String code);

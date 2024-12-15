@@ -101,7 +101,7 @@ public class ProductController {
     }
 
 
-    @PostMapping("/modify")
+    @PutMapping("/modify")
     ProductDtoResponse update(@RequestBody CreateProductRequest createProductRequest) {
         return productService.update(createProductRequest);
     }

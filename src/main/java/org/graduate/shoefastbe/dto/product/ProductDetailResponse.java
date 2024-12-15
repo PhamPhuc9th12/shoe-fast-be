@@ -27,6 +27,7 @@ public class ProductDetailResponse {
     private String brand;
     private Double price;
     private Long view;
+    private Boolean isActive;
 
 
 }

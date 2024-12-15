@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
     Boolean existsByUsername(String username);
-    Account findByUsername(String username);
+    Account findByUsernameAndIsActive(String username, Boolean isActive);
 
     @Query("SELECT new org.graduate.shoefastbe.dto.account.AccountResponse( a.id, a.username, a.createDate, a.modifyDate, a.isActive , a.role," +
             " ad.fullName, ad.gender, ad.phone, ad.email, ad.address, ad.birthdate ) FROM Account a " +

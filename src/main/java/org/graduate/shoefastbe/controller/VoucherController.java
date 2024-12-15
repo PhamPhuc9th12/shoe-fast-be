@@ -36,7 +36,7 @@ public class VoucherController {
     VoucherDtoResponse getDetail(@RequestParam Long id){
         return voucherService.getDetail(id);
     }
-    @PutMapping("/update")
+    @PostMapping("/update")
     VoucherDtoResponse update(@RequestBody Voucher voucher){
         return voucherService.update(voucher);
     }

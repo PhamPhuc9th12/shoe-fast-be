@@ -20,4 +20,5 @@ public class CreateProductRequest {
     private List<Long> categoryId;
     private List<String> imageUrl;
     private List<AttributeDtoRequest> attribute;
+    private Boolean isActive;
 }

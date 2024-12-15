@@ -57,10 +57,12 @@ public class SaleServiceImpl implements SaleService{
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         saleMapper.update(sales,saleResponse);
+        sales.setCreateDate(LocalDate.now());
+        sales.setModifyDate(LocalDate.now());
         List<Product> products = productRepository.findAllBySaleId(sales.getId());
         if(Boolean.FALSE.equals(sales.getIsActive())){
             for(Product product : products){
-                product.setSaleId(1L);
+                product.setSaleId(2L);
                 productRepository.save(product);
             }
         }

@@ -63,7 +63,7 @@ public class AccountController {
     }
     @PutMapping("/update-profile")
     @Operation(summary = "Cập nhập thong tin")
-    AccountDetail forgotPassword(@RequestBody AccountUpdateRequest accountUpdateRequest)  {
+    AccountDetail updateAccount(@RequestBody AccountUpdateRequest accountUpdateRequest)  {
         return accountService.updateProfile(accountUpdateRequest);
     }
 

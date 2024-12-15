@@ -92,7 +92,7 @@ public class AccountServiceImpl implements AccountService {
     }
     @Override
     public TokenAndRole login(LoginRequest loginRequest) {
-        Account userEntity = accountRepository.findByUsername(loginRequest.getUsername());
+        Account userEntity = accountRepository.findByUsernameAndIsActive(loginRequest.getUsername(), Boolean.TRUE);
         if (Objects.isNull(userEntity) || Boolean.FALSE.equals(userEntity.getIsActive())){
             throw new RuntimeException(CodeAndMessage.ERR4);
         }
@@ -108,14 +108,14 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse findByUsername(String accessToken) {
         String username = TokenHelper.getUsernameFromToken(accessToken);
-        Account account = accountRepository.findByUsername(username);
+        Account account = accountRepository.findByUsernameAndIsActive(username, Boolean.TRUE);
        return getAccountDetail(account, account.getId());
     }
 
     @Override
     @Transactional
     public SuccessResponse forgotPassword(ForgotPassRequest forgotPassRequest) throws MessagingException {
-        Account account = accountRepository.findByUsername(forgotPassRequest.getUsername());
+        Account account = accountRepository.findByUsernameAndIsActive(forgotPassRequest.getUsername(), Boolean.TRUE);
         if(Objects.isNull(account)) throw new RuntimeException(CodeAndMessage.ERR2);
         String newPassword = String.valueOf(UUID.randomUUID());
         account.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
@@ -137,6 +137,14 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     public AccountDetail updateProfile(AccountUpdateRequest accountUpdateRequest) {
         AccountDetail accountDetail = accountDetailRepository.findByAccountId(accountUpdateRequest.getId());
+        Account account = accountRepository.findById(accountUpdateRequest.getId()).orElseThrow(
+                () -> new RuntimeException(CodeAndMessage.ERR3)
+        );
+        if(RoleEnums.ADMIN.name().equals(account.getRole()) && accountUpdateRequest.getIsActive().equals(Boolean.FALSE)){
+            throw new RuntimeException(CodeAndMessage.ERR12);
+        }
+        account.setIsActive(accountUpdateRequest.getIsActive());
+        accountRepository.save(account);
         accountDetailMapper.updateEntityByUpdateAccount(accountDetail, accountUpdateRequest);
         accountDetailRepository.save(accountDetail);
         return accountDetail;
