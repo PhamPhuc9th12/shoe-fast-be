@@ -51,19 +51,19 @@ public class CustomRepository {
         List<Long> productBrandIds = productRepository.findAllByBrandIdIn(brandIds).stream().map(Product::getId)
                 .collect(Collectors.toList());
         List<Long> productCategoryIds = productCategoryRepository.findAllByCategoryIdIn(categoryIds).stream()
-                .map(ProductCategory::getId)
+                .map(ProductCategory::getProductId)
                 .collect(Collectors.toList());
-        Set<Long> productIds = new HashSet<>(productBrandIds);
-        productIds.addAll(productCategoryIds);
+
         Page<Attribute> attributeEntities = Filter.builder(Attribute.class, entityManager)
                 .filter()
                 .isEqual("size", 39L)
-                .isIn("productId", productIds)
+                .isIn("productId", productCategoryIds)
+                .isIn("productId", productBrandIds)
                 .isGreaterThanOrEqual("price", min)
                 .isLessThanOrEqual("price", max)
                 .getPage(pageable);
         if (attributeEntities.isEmpty()) {
-            throw new RuntimeException(CodeAndMessage.ERR3);
+           return Page.empty();
         }
         return attributeEntities;
     }
