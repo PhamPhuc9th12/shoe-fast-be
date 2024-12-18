@@ -25,7 +25,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllProductByCategory(@Param("categoryId") Long categoryId);
 
     Page<Product> findAllByBrandIdAndIsActive(Long productId, Boolean isActive, Pageable pageable);
-    @Query("SELECT p FROM Product p" +
+    @Query("SELECT distinct p FROM Product p" +
             " inner join Attribute a on p.id = a.productId " +
             "where LOWER(p.name) like LOWER(CONCAT('%', :search, '%'))" +
             " or LOWER(p.code) like LOWER(CONCAT('%', :search, '%'))")
