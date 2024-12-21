@@ -8,5 +8,5 @@ import lombok.*;
 @Setter
 @Builder
 public class ForgotPassRequest {
-    private String username;
+    private String email;
 }

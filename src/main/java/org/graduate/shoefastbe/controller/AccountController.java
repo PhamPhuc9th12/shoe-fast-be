@@ -67,6 +67,13 @@ public class AccountController {
         return accountService.updateProfile(accountUpdateRequest);
     }
 
+    @PutMapping("/change-password")
+    @Operation(summary = "Cập nhật mật khẩu")
+    SuccessResponse changePassword(@RequestBody ChangePasswordRequest changePasswordRequest)  {
+        return accountService.changePassword(changePasswordRequest);
+    }
+
+
     //admin
     @PostMapping("/admin/create")
     AccountResponse createAccount(@RequestBody AccountCreateRequest accountCreateRequest ){

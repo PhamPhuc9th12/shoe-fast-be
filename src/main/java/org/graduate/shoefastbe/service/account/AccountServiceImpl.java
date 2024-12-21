@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
@@ -115,15 +116,23 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public SuccessResponse forgotPassword(ForgotPassRequest forgotPassRequest) throws MessagingException {
-        Account account = accountRepository.findByUsernameAndIsActive(forgotPassRequest.getUsername(), Boolean.TRUE);
+        AccountDetail accountDetail = accountDetailRepository.findByEmail(forgotPassRequest.getEmail());
+        Account account = accountRepository.findByIdAndIsActive(accountDetail.getAccountId(), Boolean.TRUE);
         if(Objects.isNull(account)) throw new RuntimeException(CodeAndMessage.ERR2);
         String newPassword = String.valueOf(UUID.randomUUID());
         account.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         accountRepository.saveAndFlush(account);
         //gửi mail
-        AccountDetail accountDetail = accountDetailRepository.findByAccountId(account.getId());
-        MailUtil.sendmailForgotPassword(accountDetail.getEmail(), newPassword);
-        return SuccessHandle.success(CodeAndMessage.ME100);
+        CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        MailUtil.sendmailForgotPassword(accountDetail.getEmail(), newPassword);
+                    } catch (MessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
+        return SuccessHandle.success(CodeAndMessage.ME107);
     }
 
     @Override
@@ -133,6 +142,25 @@ public class AccountServiceImpl implements AccountService {
         );
         return getAccountDetail(account, id);
     }
+
+    @Override
+    @Transactional
+    public SuccessResponse changePassword(ChangePasswordRequest changePasswordRequest) {
+        validatePassword(changePasswordRequest.getNewPassword());
+        Account userEntity = accountRepository.findByUsernameAndIsActive(changePasswordRequest.getUsername(), Boolean.TRUE);
+        if (Objects.isNull(userEntity) || Boolean.FALSE.equals(userEntity.getIsActive())){
+            throw new RuntimeException(CodeAndMessage.ERR4);
+        }
+        String currentHashedPassword = userEntity.getPassword();
+        if (BCrypt.checkpw(changePasswordRequest.getPassword(), currentHashedPassword)){
+            userEntity.setPassword(BCrypt.hashpw(changePasswordRequest.getNewPassword(), BCrypt.gensalt()));
+            accountRepository.save(userEntity);
+            return SuccessHandle.success(CodeAndMessage.ME108);
+        }else{
+            throw new RuntimeException(CodeAndMessage.ERR1);
+        }
+    }
+
     @Override
     @Transactional
     public AccountDetail updateProfile(AccountUpdateRequest accountUpdateRequest) {

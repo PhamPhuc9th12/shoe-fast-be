@@ -16,6 +16,7 @@ public interface AccountService {
     AccountResponse findByUsername(String username);
     SuccessResponse forgotPassword(ForgotPassRequest forgotPassRequest) throws MessagingException;
     AccountResponse getDetailById(Long id);
+    SuccessResponse changePassword(ChangePasswordRequest changePasswordRequest);
     AccountDetail updateProfile(AccountUpdateRequest accountUpdateRequest);
     AccountResponse createAccount( AccountCreateRequest accountCreateRequest );
     Long countAccount();

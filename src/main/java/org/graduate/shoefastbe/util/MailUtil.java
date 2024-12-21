@@ -27,7 +27,7 @@ public class MailUtil {
 
         Session session = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(email, password);
+                return new PasswordAuthentication("pphuc9122002@gmail.com", "efxxykccrzktdmmv");
             }
         });
         Message msg = new MimeMessage(session);
@@ -61,7 +61,7 @@ public class MailUtil {
             }
         });
         Message msg = new MimeMessage(session);
-        msg.setFrom(new InternetAddress("tanvxph13005@fpt.edu.vn", false));
+        msg.setFrom(new InternetAddress("phucpt.ptit.edu.vn", false));
 
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(order.getEmail()));
         StringBuilder sb = new StringBuilder()
@@ -84,17 +84,22 @@ public class MailUtil {
 
         Session session = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(email, password);
+                return new PasswordAuthentication("pphuc9122002@gmail.com", "efxxykccrzktdmmv");
             }
         });
         Message msg = new MimeMessage(session);
         msg.setFrom(new InternetAddress(email, false));
 
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(receive));
-        msg.setSubject("ShoeFast thông báo");
         msg.setContent("New Pasword: " + password, "text/html");
         msg.setSentDate(new Date());
-
+        StringBuilder sb = new StringBuilder()
+                .append("New Pasword: " + password).append("<br/>")
+                .append("Đổi mật khẩu tại đây: ")
+                .append("http://localhost:3000/change-password");
+        msg.setSubject("Cửa hàng giày ShoeFast thông báo");
+        msg.setContent(sb.toString(), "text/html; charset=utf-8");
+        msg.setSentDate(new Date());
         Transport.send(msg);
     }
 }
