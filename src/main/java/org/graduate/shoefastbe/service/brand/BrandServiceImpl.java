@@ -55,11 +55,14 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
+    @Transactional
     public BrandResponse update(BrandRequest brandRequest) {
         Brands brands = brandsRepository.findById(brandRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         brandsMapper.update(brands, brandRequest);
+        brands.setCreateDate(LocalDate.now());
+        brands.setModifyDate(LocalDate.now());
         brandsRepository.save(brands);
         List<Product> productEntities = productRepository.findAllByBrandIdIn(Collections.singleton(brands.getId()));
         for(Product product : productEntities){

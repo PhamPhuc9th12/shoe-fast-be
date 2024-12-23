@@ -12,6 +12,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.RAMDirectory;
+import org.graduate.shoefastbe.base.error_success_handle.CodeAndMessage;
 import org.graduate.shoefastbe.dto.product.ProductDtoResponse;
 import org.graduate.shoefastbe.entity.*;
 import org.graduate.shoefastbe.mapper.ProductMapper;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -31,52 +34,47 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class RecommendationService {
     private final ProductRepository productRepository;
-    private final AttributeRepository attributeRepository;
     private final CustomRepository customRepository;
     private final SalesRepository salesRepository;
     private final ImageRepository imageRepository;
     private final BrandsRepository brandsRepository;
-    private final ProductMapper productMapper;
-    private final ProductCategoryRepository productCategoryRepository;
-    private final ProductAccountLikeMapRepository productAccountLikeMapRepository;
     // Hàm kết hợp các đặc điểm của sản phẩm (view, name, description)
-    private String combineFeatures(String view, String name, String description) {
-        return view + " " + name + " " + description;
+    private String combineFeatures(String code, String name, String description) {
+        return code + " " + name + " " + description;
     }
     public Page<ProductDtoResponse> getRecommendations(Long productId, Pageable pageable) throws IOException {
         Product productEntity = productRepository.findById(productId).orElse(null);
         if (productEntity == null) {
-            throw new RuntimeException("Invalid product ID");
+            throw new RuntimeException(CodeAndMessage.ERR3);
         }
         List<Product> products = productRepository.findAll();
-
-        // Bước 1: Tạo danh sách các features của sản phẩm
         List<String> featuresList = products.stream()
-                .map(product -> combineFeatures(String.valueOf(product.getView()), product.getName(), product.getDescription()))
+                .sorted(Comparator.comparing(Product::getId))// Tạo danh sách các features của sản phẩm
+                .map(product -> combineFeatures(String.valueOf(product.getCode()), product.getName(), product.getDescription()))
                 .collect(Collectors.toList());
-
-        // Bước 2: Tính toán TF-IDF
-        List<Map<String, Integer>> tfidfMatrix = calculateTfIdf(featuresList);
-
-        // Bước 3: Tính Cosine Similarity
-        RealMatrix similarityMatrix = calculateCosineSimilarity(tfidfMatrix);
-
-        // Bước 4: Tìm sản phẩm tương tự dựa trên cosine similarity
-        int indexProduct = -1;
+        System.out.println("==================================FEATURE=====================================================");
+        System.out.println(featuresList);
+        List<Map<String, Double>> tfidfMatrix = calculateTfIdf(featuresList); // TF-IDF
+        System.out.println("=================TF-IDF MATRIX ====================================================");
+        tfidfMatrix.forEach(System.out::println);
+        RealMatrix similarityMatrix = calculateCosineSimilarity(tfidfMatrix); // Cosine Similarity
+        int indexProduct = -1; // get product similarity
         for (int i = 0; i < products.size(); i++) {
             if (products.get(i).getId() == productId) {
-                indexProduct = i;
+                indexProduct = Math.toIntExact(products.get(i).getId());
                 break;
             }
         }
-
         if (indexProduct == -1) {
             throw new RuntimeException("Product not found.");
         }
-
+        indexProduct = indexProduct - 1;
         // Lấy danh sách sản phẩm tương tự theo cosine similarity
         Map<Integer, Double> similarProducts = new HashMap<>();
+        System.out.println(indexProduct);
         for (int i = 0; i < similarityMatrix.getRowDimension(); i++) {
+            System.out.println("CHECK===============================");
+            System.out.println(i + "  " +similarityMatrix.getEntry(indexProduct, i));
             similarProducts.put(i, similarityMatrix.getEntry(indexProduct, i));
         }
 
@@ -89,7 +87,7 @@ public class RecommendationService {
 
         List<Product> productList = new ArrayList<>();
         Map<Long, Double> productSimilarityMap = new HashMap<>();
-        for (int i = 0; i < Math.min(3, sortedProductIds.size()); i++) {
+        for (int i = 1; i < Math.min(4, sortedProductIds.size()); i++) {
             Product product = products.get(sortedProductIds.get(i));
             Double cosineValue = similarProducts.get(sortedProductIds.get(i));
             productList.add(product);
@@ -98,6 +96,136 @@ public class RecommendationService {
         Page<Product> productPage = new PageImpl<>(productList, pageable, productList.size());
 
         return getProductDtoResponses(productPage, productSimilarityMap);
+    }
+    // Hàm tính TF-IDF matrix
+    private List<Map<String, Double>> calculateTfIdf(List<String> featuresList) throws IOException {
+        // Tạo một RAMDirectory để chứa các chỉ mục của Lucene
+        RAMDirectory ramDirectory = new RAMDirectory();
+        IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
+        IndexWriter writer = new IndexWriter(ramDirectory, config);
+
+        // Tạo các tài liệu Lucene từ các features của sản phẩm
+        for (String features : featuresList) {
+            Document doc = new Document();
+            doc.add(new TextField("content", features, Field.Store.YES));
+            writer.addDocument(doc);
+        }
+        writer.close();
+        // Tạo chỉ mục và tính toán TF-IDF
+        IndexReader reader = DirectoryReader.open(ramDirectory);
+        int totalDocs = reader.numDocs();
+        Map<String, Integer> documentFrequency = new HashMap<>();
+
+        List<Map<String, Double>> tfidfMatrix = new ArrayList<>();
+        for (int i = 0; i < reader.numDocs(); i++) {
+            Document doc = reader.document(i);
+            String text = doc.get("content");
+
+            Map<String, Integer> termFrequency = new HashMap<>();
+            StandardAnalyzer analyzer = new StandardAnalyzer();
+            TokenStream tokenStream = analyzer.tokenStream("content", text);
+            tokenStream.reset();
+            CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+            // Tính TF và cập nhật DF
+            Set<String> uniqueTermsInDocument = new HashSet<>();
+            while (tokenStream.incrementToken()) {
+                String term = charTermAttribute.toString();
+                termFrequency.put(term, termFrequency.getOrDefault(term, 0) + 1);
+                if (uniqueTermsInDocument.add(term)) { // Nếu từ chưa có trong Set
+                    // lay cac cau co tu xuat hien 1 lan
+                    documentFrequency.put(term, documentFrequency.getOrDefault(term, 0) + 1);
+                }
+            }
+            tokenStream.end();
+            tokenStream.close();
+            tfidfMatrix.add(calculateTfIdfForDoc(termFrequency, documentFrequency, totalDocs));
+        }
+
+        return tfidfMatrix;
+    }
+
+    // Hàm tính TF-IDF
+    private Map<String, Double> calculateTfIdfForDoc(Map<String, Integer> termFrequency,
+                                                     Map<String, Integer> documentFrequency,
+                                                     int totalDocs) {
+        Map<String, Double> tfidf = new HashMap<>();
+        System.out.println("TOTAL DOCS:========" + totalDocs);
+        for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
+            String term = entry.getKey();
+            int tf = entry.getValue();
+            int df = documentFrequency.getOrDefault(term, 0);
+            double idf = Math.log((double) totalDocs / (df + 1));  // IDF calculation
+
+            BigDecimal idfRounded = BigDecimal.valueOf(idf).setScale(3, RoundingMode.HALF_UP);
+            tfidf.put(term, tf * idfRounded.doubleValue());
+        }
+
+        return tfidf;
+    }
+
+
+
+    // Hàm tính Cosine Similarity giữa các vector TF-IDF
+    private RealMatrix calculateCosineSimilarity(List<Map<String, Double>> tfidfMatrix) {
+        // Tạo ma trận TF-IDF từ các termFrequency
+        List<List<Double>> tfidfVectors = new ArrayList<>();
+        Set<String> allTerms = new HashSet<>();
+        for (Map<String, Double> termFrequency : tfidfMatrix) {
+            allTerms.addAll(termFrequency.keySet());
+        }
+        for (Map<String, Double> termFrequency : tfidfMatrix) {
+            List<Double> vector = new ArrayList<>();
+            for (String term : allTerms) {
+                vector.add(termFrequency.getOrDefault(term, 0d));
+            }
+            tfidfVectors.add(vector);
+        }
+        System.out.println("====================================");
+        for(int i = 0; i< tfidfVectors.size(); i++){
+            System.out.println("vector"+i + ": " + tfidfVectors.get(i));
+        }
+        // Chuyển ma trận TF-IDF thành RealMatrix
+        double[][] tfidfArray = new double[tfidfVectors.size()][tfidfVectors.get(0).size()];
+        for (int i = 0; i < tfidfVectors.size(); i++) {
+            for (int j = 0; j < tfidfVectors.get(i).size(); j++) {
+                tfidfArray[i][j] = tfidfVectors.get(i).get(j);
+            }
+        }
+        System.out.println("========================================");
+        System.out.println(Arrays.deepToString(tfidfArray));
+
+        RealMatrix matrix = new Array2DRowRealMatrix(tfidfArray);
+        return cosineSimilarity(matrix);
+    }
+
+    // Hàm tính cosine similarity giữa hai vector
+    private RealMatrix cosineSimilarity(RealMatrix matrix) {
+        int rowCount = matrix.getRowDimension();
+        double[][] similarityMatrix = new double[rowCount][rowCount];
+
+        for (int i = 0; i < rowCount; i++) {
+            for (int j = 0; j < rowCount; j++) {
+                similarityMatrix[i][j] = cosineValueSimilarity(matrix.getRow(i), matrix.getRow(j));
+            }
+        }
+        System.out.println("MATRIX==============================================");
+        System.out.println(Arrays.deepToString(similarityMatrix));
+        return new Array2DRowRealMatrix(similarityMatrix);
+    }
+    // Hàm tính gia tri cosine similarity giữa hai vector
+    private double cosineValueSimilarity(double[] vector1, double[] vector2) {
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+
+        for (int i = 0; i < vector1.length; i++) {
+            dotProduct += vector1[i] * vector2[i];
+            normA += Math.pow(vector1[i], 2);
+            normB += Math.pow(vector2[i], 2);
+        }
+        double result = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        // Làm tròn IDF đến 3 chữ số thập phân bằng BigDecimal
+        return Math.round(result * 1000.0) / 1000.0;
     }
 
     private Page<ProductDtoResponse> getProductDtoResponses(Page<Product> productEntities,Map<Long, Double> productSimilarityMap) {
@@ -148,106 +276,4 @@ public class RecommendationService {
         );
     }
 
-    // Hàm tính TF-IDF matrix
-    private List<Map<String, Integer>> calculateTfIdf(List<String> featuresList) throws IOException {
-        // Tạo một RAMDirectory để chứa các chỉ mục của Lucene
-        RAMDirectory ramDirectory = new RAMDirectory();
-        IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
-        IndexWriter writer = new IndexWriter(ramDirectory, config);
-
-        // Tạo các tài liệu Lucene từ các features của sản phẩm
-        for (String features : featuresList) {
-            Document doc = new Document();
-            // Sử dụng TextField thay cho Field.Index.ANALYZED
-            doc.add(new TextField("content", features, Field.Store.YES));
-            writer.addDocument(doc);
-        }
-        writer.close();
-
-        // Tạo chỉ mục và tính toán TF-IDF
-        IndexReader reader = DirectoryReader.open(ramDirectory);
-        IndexSearcher searcher = new IndexSearcher(reader);
-
-        List<Map<String, Integer>> tfidfMatrix = new ArrayList<>();
-        for (int i = 0; i < reader.numDocs(); i++) {
-            Document doc = reader.document(i);
-            String text = doc.get("content");
-
-            Map<String, Integer> termFrequency = new HashMap<>();
-            StandardAnalyzer analyzer = new StandardAnalyzer();
-            TokenStream tokenStream = analyzer.tokenStream("content", text);
-            tokenStream.reset();
-            CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
-
-            while (tokenStream.incrementToken()) {
-                String term = charTermAttribute.toString();
-                termFrequency.put(term, termFrequency.getOrDefault(term, 0) + 1);
-            }
-            tokenStream.end();
-            tokenStream.close();
-
-            tfidfMatrix.add(termFrequency);
-        }
-
-        return tfidfMatrix;
-    }
-
-
-    // Hàm tính Cosine Similarity giữa các vector TF-IDF
-    private RealMatrix calculateCosineSimilarity(List<Map<String, Integer>> tfidfMatrix) {
-        // Tạo ma trận TF-IDF từ các termFrequency
-        List<List<Double>> tfidfVectors = new ArrayList<>();
-        Set<String> allTerms = new HashSet<>();
-        for (Map<String, Integer> termFrequency : tfidfMatrix) {
-            allTerms.addAll(termFrequency.keySet());
-        }
-
-        for (Map<String, Integer> termFrequency : tfidfMatrix) {
-            List<Double> vector = new ArrayList<>();
-            for (String term : allTerms) {
-                vector.add((double) termFrequency.getOrDefault(term, 0));
-            }
-            tfidfVectors.add(vector);
-        }
-
-        // Chuyển ma trận TF-IDF thành RealMatrix
-        double[][] tfidfArray = new double[tfidfVectors.size()][tfidfVectors.get(0).size()];
-        for (int i = 0; i < tfidfVectors.size(); i++) {
-            for (int j = 0; j < tfidfVectors.get(i).size(); j++) {
-                tfidfArray[i][j] = tfidfVectors.get(i).get(j);
-            }
-        }
-
-        RealMatrix matrix = new Array2DRowRealMatrix(tfidfArray);
-        return cosineSimilarity(matrix);
-    }
-
-    // Hàm tính cosine similarity giữa hai vector
-    private RealMatrix cosineSimilarity(RealMatrix matrix) {
-        int rowCount = matrix.getRowDimension();
-        double[][] similarityMatrix = new double[rowCount][rowCount];
-
-        for (int i = 0; i < rowCount; i++) {
-            for (int j = 0; j < rowCount; j++) {
-                similarityMatrix[i][j] = cosineSimilarity(matrix.getRow(i), matrix.getRow(j));
-            }
-        }
-
-        return new Array2DRowRealMatrix(similarityMatrix);
-    }
-
-    // Hàm tính cosine similarity giữa hai vector
-    private double cosineSimilarity(double[] vector1, double[] vector2) {
-        double dotProduct = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-
-        for (int i = 0; i < vector1.length; i++) {
-            dotProduct += vector1[i] * vector2[i];
-            normA += Math.pow(vector1[i], 2);
-            normB += Math.pow(vector2[i], 2);
-        }
-
-        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-    }
 }

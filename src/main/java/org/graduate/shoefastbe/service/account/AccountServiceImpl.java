@@ -201,7 +201,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Long countAccount() {
-        return accountRepository.count();
+        return accountRepository.findAll().stream()
+                .filter(account -> Boolean.TRUE.equals(account.getIsActive()))
+                .count() -1L;
     }
 
     @Override
