@@ -2,7 +2,7 @@ package org.graduate.shoefastbe.common.enums;
 
 public enum OrderStatusEnum {
     WAIT_ACCEPT("Chờ xác nhận"),
-    IS_LOADING("Đang xử lí"),
+    IS_LOADING("Đang xử lý"),
     IS_DELIVERY("Đang vận chuyển"),
     DELIVERED("Đã giao"),
     CANCELED("Đã hủy"),

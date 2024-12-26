@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -20,6 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllByPayment(String payment,Pageable pageable);
     Page<Order> findAllByOrderStatusId(Long orderStatusId, Pageable pageable);
     List<Order> findAllByOrderStatusId(Long orderStatusId);
+    List<Order> findAllByIdIn(Collection<Long> ids);
     Page<Order> findAllByOrderStatusIdAndPayment(Long orderStatusId,String payment, Pageable pageable);
 
     @Query("SELECT o FROM Order o WHERE year(o.createDate) = :year and month(o.createDate) = :month")

@@ -18,5 +18,6 @@ public class Notification {
     private Boolean read;
     private Boolean deliver;
     private Long orderId;
+    private Long productId;
     private Long type;
 }

@@ -92,6 +92,14 @@ public class OrderServiceImpl implements OrderService {
                     cartItemRepository.save(cartItem);
                 }
             }
+            Notification notification = new Notification();
+            notification.setRead(false);
+            notification.setDeliver(false);
+            notification.setContent(String.format("Đơn hàng %s vừa được tạo, xác nhận ngay nào", order.getId()));
+            notification.setOrderId(order.getId());
+            notification.setType(1L);
+            notificationRepository.save(notification);
+
             // send notification
             CompletableFuture.runAsync(() -> {
                 try {
@@ -211,11 +219,11 @@ public class OrderServiceImpl implements OrderService {
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("Đơn hàng đang được vận chuyển,không thể hủy ");
+            throw new RuntimeException("ERR10-Đơn hàng đang được vận chuyển,không thể hủy ");
         } else if (orderStatus.getName().equals(OrderStatusEnum.CANCELED.getValue())) {
-            throw new RuntimeException("Đơn hàng đã được hủy.");
+            throw new RuntimeException("ERR10-Đơn hàng đã được hủy.");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("Đơn hàng đã được giao thành công, không thể hủy");
+            throw new RuntimeException("ERR10-Đơn hàng đã được giao thành công, không thể hủy");
         }
         OrderStatus orderStatusCancel = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
         order.setOrderStatusId(orderStatusCancel.getId());
@@ -418,9 +426,9 @@ public class OrderServiceImpl implements OrderService {
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("Giao Thành công");
+            throw new RuntimeException("ERR10-Giao Thành công");
         } else if (orderStatus.getName().equals(OrderStatusEnum.CANCELED.getValue())) {
-            throw new RuntimeException("Da Hủy");
+            throw new RuntimeException("ERR10-Đã hủy");
         } else {
             OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
             order.setOrderStatusId(orderStt.getId());
@@ -435,14 +443,16 @@ public class OrderServiceImpl implements OrderService {
                 attribute.setStock(attribute.getStock() + o.getQuantity());
                 attributeRepository.save(attribute);
             }
-            Voucher voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
-                    () -> new RuntimeException(CodeAndMessage.ERR3)
-            );
-            if (voucher != null) {
-                voucher.setCount(1L);
-                voucher.setIsActive(Boolean.TRUE);
-                voucherRepository.save(voucher);
-            }
+           if(Objects.nonNull(order.getVoucherId())){
+               Voucher voucher = voucherRepository.findById(order.getVoucherId()).orElseThrow(
+                       () -> new RuntimeException(CodeAndMessage.ERR3)
+               );
+               if (voucher != null) {
+                   voucher.setCount(1L);
+                   voucher.setIsActive(Boolean.TRUE);
+                   voucherRepository.save(voucher);
+               }
+           }
             orderRepository.save(order);
             return orderMapper.getResponseByEntity(order);
         }
@@ -464,13 +474,13 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
-            throw new RuntimeException("ACCEPTED");
+            throw new RuntimeException("ERR10-ACCEPTED");
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("IS_DELIVERY");
+            throw new RuntimeException("ERR10-IS_DELIVERY");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("SUCCESS");
+            throw new RuntimeException("ERR10-SUCCESS");
         } else {
-            throw new RuntimeException(("CANCEL"));
+            throw new RuntimeException(("ERR10-CANCEL"));
         }
     }
 
@@ -485,7 +495,7 @@ public class OrderServiceImpl implements OrderService {
         );
 
         if (orderStatus.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
-            throw new RuntimeException("WAIT_ACCEPT");
+            throw new RuntimeException("ERR10-WAIT_ACCEPT");
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
             OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.IS_DELIVERY.getValue());
             order.setOrderStatusId(orderStt.getId());
@@ -496,11 +506,11 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("IS_DELIVERY");
+            throw new RuntimeException("ERR10-IS_DELIVERY");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("SUCCESS");
+            throw new RuntimeException("ERR10-SUCCESS");
         } else {
-            throw new RuntimeException("CANCEL");
+            throw new RuntimeException("ERR10-CANCEL");
         }
     }
 
@@ -517,9 +527,9 @@ public class OrderServiceImpl implements OrderService {
         );
 
         if (orderStt.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
-            throw new RuntimeException("WAIT");
+            throw new RuntimeException("ERR10-WAIT");
         } else if (orderStt.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
-            throw new RuntimeException("Đơn hàng cần xác nhận vận chuyển");
+            throw new RuntimeException("ERR10-Đơn hàng cần xác nhận vận chuyển");
         } else if (orderStt.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
             OrderStatus orderStatus = orderStatusRepository.findByName(OrderStatusEnum.DELIVERED.getValue());
             order.setOrderStatusId(orderStatus.getId());
@@ -566,9 +576,9 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.save(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStt.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("SUCCESS");
+            throw new RuntimeException("ERR10-SUCCESS");
         } else {
-            throw new RuntimeException("CANCEL");
+            throw new RuntimeException("ERR10-CANCEL");
         }
     }
 
