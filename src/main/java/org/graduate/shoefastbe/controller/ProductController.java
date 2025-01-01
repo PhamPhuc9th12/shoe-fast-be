@@ -102,8 +102,9 @@ public class ProductController {
 
 
     @PutMapping("/modify")
-    ProductDtoResponse update(@RequestBody CreateProductRequest createProductRequest) {
-        return productService.update(createProductRequest);
+    public ProductDtoResponse update(@ModelAttribute CreateProductRequest createProductRequest,
+                              @RequestPart("files") List<MultipartFile> multipartFileList) throws IOException {
+        return productService.update(createProductRequest,multipartFileList);
     }
     @GetMapping("/recommendation")
     public Page<ProductDtoResponse> getRecommendations(@RequestParam("id") Long productId,

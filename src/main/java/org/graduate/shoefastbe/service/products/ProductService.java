@@ -24,6 +24,6 @@ public interface ProductService {
 
     //admin
     ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles);
-    ProductDtoResponse update( CreateProductRequest createProductRequest);
+    ProductDtoResponse update( CreateProductRequest createProductRequest,List<MultipartFile> multipartFiles);
 
 }

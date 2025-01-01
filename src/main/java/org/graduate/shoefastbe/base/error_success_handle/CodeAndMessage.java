@@ -23,6 +23,7 @@ public class CodeAndMessage {
     public static final String ERR10 = "ERR10-Cần đăng nhập trước";
     public static final String ERR11 = "ERR11-Tên hoặc code đã tồn tại!";
     public static final String ERR12 = "ERR12-Không thể hủy trạng thái của admin";
+    public static final String ERR13 = "ERR13-Số lượng sản phẩm cần lớn hơn 1";
 
 
 }

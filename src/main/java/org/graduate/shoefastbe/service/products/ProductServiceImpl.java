@@ -275,6 +275,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles) {
+        List<AttributeDtoRequest> attributes = createProductRequest.getAttribute();
+        for(AttributeDtoRequest attributeDtoRequest : attributes){
+            if(attributeDtoRequest.getStock().equals(1L)){
+                throw new RuntimeException(CodeAndMessage.ERR13);
+            }
+        }
         if(Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(),createProductRequest.getCode().trim()))){
             throw new RuntimeException(CodeAndMessage.ERR11);
         }
@@ -351,10 +357,29 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductDtoResponse update(CreateProductRequest createProductRequest) {
+    public ProductDtoResponse update(CreateProductRequest createProductRequest,List<MultipartFile> multipartFiles) {
         Product productEntity = productRepository.findById(createProductRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
+        List<Image> images = imageRepository.findAllByProductId(productEntity.getId());
+        if(Objects.nonNull(images)){
+            imageRepository.deleteAll(images);
+        }
+        List<String> imageUrl = getImageUrls(multipartFiles);
+        for(int i = 0; i < imageUrl.size(); i++){
+            Image image = new Image();
+            if(i == 0){
+                image.setName("main");
+            }else{
+                image.setName("other");
+            }
+            image.setImageLink(imageUrl.get(i));
+            image.setCreateDate(LocalDate.now());
+            image.setModifyDate(LocalDate.now());
+            image.setIsActive(Boolean.TRUE);
+            image.setProductId(productEntity.getId());
+            imageRepository.save(image);
+        }
         productMapper.update(productEntity, createProductRequest);
         productEntity.setView(1L);
         productEntity.setIsActive(createProductRequest.getIsActive());
