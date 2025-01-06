@@ -123,15 +123,11 @@ public class AccountServiceImpl implements AccountService {
         account.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         accountRepository.saveAndFlush(account);
         //gửi mail
-        CompletableFuture.runAsync(
-                () -> {
-                    try {
-                        MailUtil.sendmailForgotPassword(accountDetail.getEmail(), newPassword);
-                    } catch (MessagingException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        );
+        try {
+            MailUtil.sendmailForgotPassword(accountDetail.getEmail(), newPassword);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
         return SuccessHandle.success(CodeAndMessage.ME107);
     }
 
@@ -170,6 +166,9 @@ public class AccountServiceImpl implements AccountService {
         );
         if(RoleEnums.ADMIN.name().equals(account.getRole()) && accountUpdateRequest.getIsActive().equals(Boolean.FALSE)){
             throw new RuntimeException(CodeAndMessage.ERR12);
+        }
+        if(accountDetailRepository.existsByEmail(accountUpdateRequest.getEmail()) && !accountDetail.getEmail().equals(accountUpdateRequest.getEmail())){
+            throw new RuntimeException("ERR111-Email đã tồn tại");
         }
         account.setIsActive(accountUpdateRequest.getIsActive());
         accountRepository.save(account);

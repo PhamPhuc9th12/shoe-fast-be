@@ -27,7 +27,7 @@ public class MailUtil {
 
         Session session = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("pphuc9122002@gmail.com", "efxxykccrzktdmmv");
+                return new PasswordAuthentication(email, password);
             }
         });
         Message msg = new MimeMessage(session);
@@ -35,8 +35,8 @@ public class MailUtil {
 
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(order.getEmail()));
         StringBuilder sb = new StringBuilder()
-                .append("Đơn hàng " + order.getId()).append("<br/>")
-                .append("Tổng tiền: " + order.getTotal()).append("<br/>")
+                .append("Đơn hàng từ cửa hàng ShoeFast " ).append("<br/>")
+                .append("Tổng tiền: " + order.getTotal()).append("Vnd").append("<br/>")
                 .append("Ngày tạo: " + order.getCreateDate()).append("<br/>")
                 .append("Người nhận:" + order.getFullName()).append("<br/>")
                 .append("SDT: " + order.getPhone()).append("<br/>")

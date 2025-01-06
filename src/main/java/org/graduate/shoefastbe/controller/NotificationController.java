@@ -18,18 +18,22 @@ import java.util.List;
 public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
+
     @GetMapping("/load")
-public List<NotificationResponse> loadNotification(){
-       return notificationService.loadNotification(false, true);
+    public List<NotificationResponse> loadNotification() {
+        return notificationService.loadNotification(false, true);
     }
+
     @GetMapping("/read")
-    public NotificationResponse readNotification(@RequestParam("id") Long id){
+    public NotificationResponse readNotification(@RequestParam("id") Long id) {
         return notificationService.modifyNotification(id);
     }
+
     @GetMapping("/push")
-    public ResponseEntity<?> pushNotification(){
+    public ResponseEntity<?> pushNotification() {
+        // lấy ra cac thông báo sau khi dặt hàng, set deliver => true dể cho load lấy ra nhằm xác dinh thong báo da dc gửi tới admin
         List<Notification> notifications = notificationRepository.getNotificationByReadEqualsAndDeliverEquals(false, false);
-        for (Notification n: notifications){
+        for (Notification n : notifications) {
             n.setDeliver(true);
             notificationService.updateNotification(n);
         }

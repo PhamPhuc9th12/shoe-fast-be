@@ -43,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
             Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
             return getProductDtoResponses(productEntities);
         }else{
+            // lấy sản phẩm của người dùng đã đăng nhập -> lấy ra các sản phẩm thích
             Long userId = TokenHelper.getUserIdFromToken(accessToken);
             Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
 
@@ -358,9 +359,19 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDtoResponse update(CreateProductRequest createProductRequest,List<MultipartFile> multipartFiles) {
+        List<AttributeDtoRequest> attributes = createProductRequest.getAttribute();
+        for(AttributeDtoRequest attributeDtoRequest : attributes){
+            if(attributeDtoRequest.getStock().equals(1L)){
+                throw new RuntimeException(CodeAndMessage.ERR13);
+            }
+        }
         Product productEntity = productRepository.findById(createProductRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
+        if(Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(),createProductRequest.getCode().trim())) &&
+                !createProductRequest.getCode().equals(productEntity.getCode())){
+            throw new RuntimeException(CodeAndMessage.ERR11);
+        }
         List<Image> images = imageRepository.findAllByProductId(productEntity.getId());
         if(Objects.nonNull(images)){
             imageRepository.deleteAll(images);
@@ -396,10 +407,11 @@ public class ProductServiceImpl implements ProductService {
 
         }
         /*Create attribute of product*/
-       List<AttributeDtoRequest> reqAttributeDtos = new ArrayList<>();
+       List<AttributeDtoRequest> reqAttributeDtos = createProductRequest.getAttribute();
         for(AttributeDtoRequest r: reqAttributeDtos){
-            Attribute attribute = attributeRepository.findByProductIdAndSize(productEntity.getId(),39L);
+            Attribute attribute = attributeRepository.findByProductIdAndSize(productEntity.getId(),r.getSize());
             if(Objects.nonNull(attribute)){
+                attribute.setName(productEntity.getName());
                 attribute.setStock(r.getStock());
                 attribute.setSize(r.getSize());
                 attribute.setPrice(r.getPrice());

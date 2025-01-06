@@ -9,6 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -31,32 +32,32 @@ public class TestView {
         driver = new ChromeDriver(options);
         driver.manage().window().maximize();
     }
-
-    @Test
-    public void testLogin() {
-        driver.get("http://localhost:3000/sign-in");
+    @Test(description = "Xem chi tiết đơn hàng")
+    void viewDetailOrder(){
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        WebElement emailField = driver.findElement(By.id("username"));
-        WebElement passwordField = driver.findElement(By.id("password"));
-        emailField.sendKeys("phuc1");
-        passwordField.sendKeys("1");
-        WebElement loginBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
-        loginBtn.click();
-        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/"));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        login();
+        sleep(1000);
+        WebElement orderBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("order")));
+        orderBtn.click();
+        sleep(1000);
+        String initialUrl = driver.getCurrentUrl();
+        WebElement idBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("card-title")));
+        idBtn.click();
+        wait.until(driver -> !driver.getCurrentUrl().equals(initialUrl));
         String currentUrl = driver.getCurrentUrl();
-        Assert.assertEquals("http://localhost:3000/", currentUrl);
-        sleep(3000);
-        System.out.println("Đăng nhập thành công!!");
-    }
+        Assert.assertNotEquals("Success", initialUrl, currentUrl);
+        sleep(2000);
 
-    @Test
+    }
+    @Test(description = "Thêm sản phẩm vào giỏ hàng thành công")
     public void testAddToCart() {
         driver.get("http://localhost:3000/sign-in");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         WebElement emailField = driver.findElement(By.id("username"));
         WebElement passwordField = driver.findElement(By.id("password"));
         emailField.sendKeys("phuc1");
-        passwordField.sendKeys("1");
+        passwordField.sendKeys("Phuc09122002@");
         WebElement loginBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
         loginBtn.click();
         wait.until(ExpectedConditions.urlToBe("http://localhost:3000/"));
@@ -84,6 +85,248 @@ public class TestView {
         wait.until(ExpectedConditions.urlToBe("http://localhost:3000/cart"));
         String currentUrl = driver.getCurrentUrl();
         Assert.assertEquals("http://localhost:3000/cart", currentUrl);
+    }
+
+    @Test( description = "Order đơn hàng")
+    public void orderProduct(){
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        login();
+        sleep(1000);
+        WebElement cartBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("cart")));
+        cartBtn.click();
+        sleep(2000);
+        WebElement checkBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("form-check-input")));
+        checkBtn.click();
+        js.executeScript("window.scrollTo(0, 600);");
+        sleep(1000);
+        WebElement buyBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-primary")));
+        buyBtn.click();
+        js.executeScript("window.scrollTo(0, 0);");
+        sleep(1000);
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/checkout"));
+        WebElement province = wait.until(ExpectedConditions.elementToBeClickable(By.name("province")));
+        province.click();
+        Select selectProvince = new Select(province);
+        selectProvince.selectByVisibleText("Tỉnh Yên Bái");
+        sleep(1000);
+        WebElement district = wait.until(ExpectedConditions.elementToBeClickable(By.name("district")));
+        district.click();
+        Select selectDistrict = new Select(district);
+        selectDistrict.selectByVisibleText("Thành phố Yên Bái");
+        sleep(1000);
+
+        WebElement ward = wait.until(ExpectedConditions.elementToBeClickable(By.name("ward")));
+        ward.click();
+        Select selectWard = new Select(ward);
+        selectWard.selectByVisibleText("Phường Hồng Hà");
+        js.executeScript("window.scrollBy(0, 200)");
+        sleep(3000);
+        WebElement orderBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("order-btn")));
+        orderBtn.click();
+        sleep(1000);
+        WebElement confirmBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-danger")));
+        confirmBtn.click();
+        sleep(1000);
+        WebElement toastMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("Toastify__toast-body")));
+        String toastText = toastMessage.getText();
+
+        // Kiểm tra nội dung thông báo lỗi
+        Assert.assertEquals("Đặt hàng thành công", toastText);
+
+    }
+    @Test(description = "Case đăng nhập không thành công")
+    public void testLoginFaild() {
+        driver.get("http://localhost:3000/sign-in");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement emailField = driver.findElement(By.id("username"));
+        WebElement passwordField = driver.findElement(By.id("password"));
+        emailField.sendKeys("phuc1");
+        passwordField.sendKeys("1");
+        WebElement loginBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
+        loginBtn.click();
+        String currentUrl = driver.getCurrentUrl();
+        Assert.assertEquals("http://localhost:3000/sign-in", currentUrl);
+        sleep(1000);
+        System.out.println("Đăng nhập thất bại");
+    }
+
+    @Test(description ="Đổi mật khẩu thất bại do sai mật khẩu" )
+    public void changePasswordFaild() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        login();
+        sleep(1000);
+        WebElement dropdownBt = wait.until(ExpectedConditions.elementToBeClickable(By.className("dropdown__toggle")));
+        dropdownBt.click();
+        sleep(1000);
+        WebElement infoButton = wait.until(ExpectedConditions.elementToBeClickable(By.className("notification-item")));
+        infoButton.click();
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/profile"));
+        js.executeScript("window.scrollBy(0, 200)");
+        sleep(1000);
+        WebElement changePassBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("changepw")));
+        changePassBtn.click();
+        sleep(1000);
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/change-password"));
+        js.executeScript("window.scrollBy(0, 300)");
+        WebElement usernameField = driver.findElement(By.id("username"));
+        usernameField.sendKeys("phuc1");
+        WebElement passwordField = driver.findElement(By.id("password"));
+        passwordField.sendKeys("Phuc9122002@");
+        WebElement newPassField = driver.findElement(By.id("newPassword"));
+        newPassField.sendKeys("Phuc09122002@");
+        sleep(1000);
+        WebElement updateBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
+        updateBtn.click();
+        sleep(1000);
+        WebElement toastMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("Toastify__toast-body")));
+        String toastText = toastMessage.getText();
+
+        // Kiểm tra nội dung thông báo lỗi
+        Assert.assertEquals("Sai mật khẩu, vui lòng thử lại", toastText);
+        sleep(1000);
+
+    }
+    @Test(description = "Đổi mật khẩu thất bại do mật khẩu không đúng định dạng")
+    public void changePasswordFaildValidPass() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        login();
+        sleep(1000);
+        WebElement dropdownBt = wait.until(ExpectedConditions.elementToBeClickable(By.className("dropdown__toggle")));
+        dropdownBt.click();
+        sleep(1000);
+        WebElement infoButton = wait.until(ExpectedConditions.elementToBeClickable(By.className("notification-item")));
+        infoButton.click();
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/profile"));
+        js.executeScript("window.scrollBy(0, 200)");
+        sleep(1000);
+        WebElement changePassBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("changepw")));
+        changePassBtn.click();
+        sleep(1000);
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/change-password"));
+        js.executeScript("window.scrollBy(0, 300)");
+        WebElement usernameField = driver.findElement(By.id("username"));
+        usernameField.sendKeys("phuc1");
+        WebElement passwordField = driver.findElement(By.id("password"));
+        passwordField.sendKeys("Phuc9122002@");
+        WebElement newPassField = driver.findElement(By.id("newPassword"));
+        newPassField.sendKeys("aloooo");
+        sleep(1000);
+        WebElement updateBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
+        updateBtn.click();
+        sleep(1000);
+        WebElement toastMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("Toastify__toast-body")));
+        String toastText = toastMessage.getText();
+
+        // Kiểm tra nội dung thông báo lỗi
+        Assert.assertEquals("Mật khẩu có ít nhất 8 ký tự bao gồm chữ hoa, chữ thường và ký tự đặc biệt!", toastText);
+        sleep(1000);
+
+    }
+
+    @Test(description = "Đăng nhập thành công")
+    public void testLoginSuccess() {
+        driver.get("http://localhost:3000/sign-in");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement emailField = driver.findElement(By.id("username"));
+        WebElement passwordField = driver.findElement(By.id("password"));
+        emailField.sendKeys("phuc1");
+        passwordField.sendKeys("Phuc09122002@");
+        sleep(2000);
+        WebElement loginBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
+        loginBtn.click();
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/"));
+        String currentUrl = driver.getCurrentUrl();
+        Assert.assertEquals("http://localhost:3000/", currentUrl);
+        sleep(1000);
+        System.out.println("Đăng nhập thành công");
+    }
+
+    @Test(description = "Xem chi tiết thông tin cá nhân")
+    public void viewInforUser() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        login();
+        sleep(1000);
+        WebElement dropdownBt = wait.until(ExpectedConditions.elementToBeClickable(By.className("dropdown__toggle")));
+        dropdownBt.click();
+        sleep(1000);
+        WebElement infoButton = wait.until(ExpectedConditions.elementToBeClickable(By.className("notification-item")));
+        infoButton.click();
+        sleep(1000);
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/profile"));
+        String currentUrl = driver.getCurrentUrl();
+        Assert.assertEquals("http://localhost:3000/profile", currentUrl);
+
+    }
+
+    @Test(description = "Cập nhật thông tin cá nhân thành công")
+    public void updateInforUserSuccess() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        login();
+        sleep(1000);
+        WebElement dropdownBt = wait.until(ExpectedConditions.elementToBeClickable(By.className("dropdown__toggle")));
+        dropdownBt.click();
+        sleep(1000);
+        WebElement infoButton = wait.until(ExpectedConditions.elementToBeClickable(By.className("notification-item")));
+        infoButton.click();
+        sleep(1000);
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/profile"));
+        WebElement fullNameField = driver.findElement(By.id("fullName"));
+        fullNameField.clear();
+        fullNameField.sendKeys("Đỗ Văn Long");
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("window.scrollBy(0, 200)");
+        sleep(2000);
+        WebElement updateBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-primary")));
+        updateBtn.click();
+        sleep(3000);
+        WebElement toastMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("Toastify__toast-body")));
+        String toastText = toastMessage.getText();
+
+        // Kiểm tra nội dung thông báo lỗi
+        Assert.assertEquals("Cập nhật thông tin thành công!", toastText);
+        sleep(1000);
+    }
+
+    @Test(description = "Cập nhật thông tin cá nhân thất bại do trùng email")
+    public void updateInforUserFail() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        login();
+        sleep(1000);
+        WebElement dropdownBt = wait.until(ExpectedConditions.elementToBeClickable(By.className("dropdown__toggle")));
+        dropdownBt.click();
+        sleep(1000);
+        WebElement infoButton = wait.until(ExpectedConditions.elementToBeClickable(By.className("notification-item")));
+        infoButton.click();
+        sleep(1000);
+        wait.until(ExpectedConditions.urlToBe("http://localhost:3000/profile"));
+        WebElement emailField = driver.findElement(By.id("email"));
+        emailField.clear();
+        emailField.sendKeys("pphuc9122002@gmail.com");
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("window.scrollBy(0, 200)");
+        sleep(2000);
+        WebElement updateBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-primary")));
+        updateBtn.click();
+        sleep(3000);
+        WebElement toastMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("Toastify__toast-body")));
+        String toastText = toastMessage.getText();
+
+        // Kiểm tra nội dung thông báo lỗi
+        Assert.assertEquals("Email đã tồn tại", toastText);
+        sleep(1000);
+    }
+    private void login() {
+        driver.get("http://localhost:3000/sign-in");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement emailField = driver.findElement(By.id("username"));
+        WebElement passwordField = driver.findElement(By.id("password"));
+        emailField.sendKeys("phuc1");
+        passwordField.sendKeys("Phuc09122002@");
+        WebElement loginBtn = wait.until(ExpectedConditions.elementToBeClickable(By.className("btn-outline-light")));
+        loginBtn.click();
     }
 
     @AfterMethod

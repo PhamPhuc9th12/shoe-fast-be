@@ -92,22 +92,20 @@ public class OrderServiceImpl implements OrderService {
                     cartItemRepository.save(cartItem);
                 }
             }
-            Notification notification = new Notification();
-            notification.setRead(false);
-            notification.setDeliver(false);
-            notification.setContent(String.format("Đơn hàng %s vừa được tạo, xác nhận ngay nào", order.getId()));
-            notification.setOrderId(order.getId());
-            notification.setType(1L);
-            notificationRepository.save(notification);
 
             // send notification
-            CompletableFuture.runAsync(() -> {
-                try {
-                    sendNotification(order);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
+//            CompletableFuture.runAsync(() -> {
+//                try {
+//                    sendNotification(order);
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                }
+//            });
+            try {
+                sendNotification(order);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             return orderMapper.getResponseByEntity(order);
         } catch (OptimisticLockException | StaleStateException exception) {
             return new OrderDtoResponse();
@@ -129,6 +127,7 @@ public class OrderServiceImpl implements OrderService {
         }
         orderDtoResponse.setOrderStatusName(orderStatus.getName());
         orderDtoResponse.setDiscount(voucher.getDiscount());
+        orderDtoResponse.setShipDate(order.getShipDate());
         return orderDtoResponse;
     }
 
@@ -244,7 +243,7 @@ public class OrderServiceImpl implements OrderService {
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
             if (voucher != null) {
-                voucher.setCount(1L);
+                voucher.setCount(voucher.getCount()+1L);
                 voucher.setIsActive(Boolean.TRUE);
                 voucherRepository.save(voucher);
             }
@@ -426,9 +425,9 @@ public class OrderServiceImpl implements OrderService {
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
         if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("ERR10-Giao Thành công");
+            throw new RuntimeException("ERR10-Đơn hàng đã được giao thành công");
         } else if (orderStatus.getName().equals(OrderStatusEnum.CANCELED.getValue())) {
-            throw new RuntimeException("ERR10-Đã hủy");
+            throw new RuntimeException("ERR10-Đơn hàng đã hủy");
         } else {
             OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.CANCELED.getValue());
             order.setOrderStatusId(orderStt.getId());
@@ -474,13 +473,13 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
-            throw new RuntimeException("ERR10-ACCEPTED");
+            throw new RuntimeException("ERR10-Đơn hàng đã được chấp nhận");
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("ERR10-IS_DELIVERY");
+            throw new RuntimeException("ERR10-Đơn hàng đã được vận chuyển ");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("ERR10-SUCCESS");
+            throw new RuntimeException("ERR10-Đơn hàng đã được giao thành công");
         } else {
-            throw new RuntimeException(("ERR10-CANCEL"));
+            throw new RuntimeException(("ERR10-Đơn hàng đã hủy"));
         }
     }
 
@@ -495,7 +494,7 @@ public class OrderServiceImpl implements OrderService {
         );
 
         if (orderStatus.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
-            throw new RuntimeException("ERR10-WAIT_ACCEPT");
+            throw new RuntimeException("ERR10-Đơn hàng đang chờ xác nhận");
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
             OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.IS_DELIVERY.getValue());
             order.setOrderStatusId(orderStt.getId());
@@ -506,11 +505,11 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("ERR10-IS_DELIVERY");
+            throw new RuntimeException("ERR10-Đơn hàng đã được vận chuyển");
         } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("ERR10-SUCCESS");
+            throw new RuntimeException("ERR10-Đơn hàng đã được giao thành công");
         } else {
-            throw new RuntimeException("ERR10-CANCEL");
+            throw new RuntimeException("ERR10-Đơn hàng đã hủy");
         }
     }
 
@@ -527,7 +526,7 @@ public class OrderServiceImpl implements OrderService {
         );
 
         if (orderStt.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
-            throw new RuntimeException("ERR10-WAIT");
+            throw new RuntimeException("ERR10-Đơn hàng đang chờ xác nhận");
         } else if (orderStt.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
             throw new RuntimeException("ERR10-Đơn hàng cần xác nhận vận chuyển");
         } else if (orderStt.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
@@ -542,15 +541,6 @@ public class OrderServiceImpl implements OrderService {
                 );
                 attribute.setCache(attribute.getCache() - o.getQuantity());
                 attributeRepository.save(attribute);
-            }
-            if (Objects.nonNull(order.getVoucherId())) {
-                Voucher v = voucherRepository.findById(order.getVoucherId()).orElseThrow(
-                        () -> new RuntimeException(CodeAndMessage.ERR3)
-                );
-                if (v != null) {
-                    v.setIsActive(Boolean.FALSE);
-                    voucherRepository.save(v);
-                }
             }
             if (order.getTotal() > 1000000) {
                 Voucher voucher = new Voucher();
@@ -576,9 +566,9 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.save(order);
             return orderMapper.getResponseByEntity(order);
         } else if (orderStt.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("ERR10-SUCCESS");
+            throw new RuntimeException("ERR10-Đơn hàng đã được giao thành công");
         } else {
-            throw new RuntimeException("ERR10-CANCEL");
+            throw new RuntimeException("ERR10-Đơn hàng đã hủy");
         }
     }
 

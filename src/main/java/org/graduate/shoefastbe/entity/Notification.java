@@ -19,5 +19,5 @@ public class Notification {
     private Boolean deliver;
     private Long orderId;
     private Long productId;
-    private Long type;
+    private Long type; // 1- đơn hàng dc tạo, 2- đơn hàng đã hủy, 3- sp sắp hết số lượng
 }

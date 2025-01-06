@@ -11,7 +11,7 @@ public class CodeAndMessage {
 
 
     //error
-    public static final String ERR1 = "ERR1-Sai mật khẩu, vui long thử lại";
+    public static final String ERR1 = "ERR1-Sai mật khẩu, vui lòng thử lại";
     public static final String ERR2 = "ERR2-Tài khoản không tồn tại!";
     public static final String ERR3 = "ERR3-Dữ liệu không tồn tại !";
     public static final String ERR4 = "ERR4-Không có quyền truy cập ";

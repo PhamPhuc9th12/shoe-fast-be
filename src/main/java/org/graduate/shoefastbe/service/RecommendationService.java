@@ -59,9 +59,9 @@ public class RecommendationService {
         tfidfMatrix.forEach(System.out::println);
         RealMatrix similarityMatrix = calculateCosineSimilarity(tfidfMatrix); // Cosine Similarity
         int indexProduct = -1; // get product similarity
-        for (int i = 0; i < products.size(); i++) {
-            if (products.get(i).getId() == productId) {
-                indexProduct = Math.toIntExact(products.get(i).getId());
+        for (int i = 1; i <= products.size(); i++) {
+            if (products.get(i-1).getId() == productId) {
+                indexProduct = i;
                 break;
             }
         }
