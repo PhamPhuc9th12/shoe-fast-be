@@ -58,6 +58,7 @@ public class OrderServiceImpl implements OrderService {
 
             if (Objects.nonNull(orderDtoRequest.getCode()) && !orderDtoRequest.getCode().isEmpty()) {
                 Voucher voucher = voucherRepository.findVoucherByCode(orderDtoRequest.getCode());
+                if(voucher.getCount() <= 0) throw new RuntimeException(CodeAndMessage.ERR8);
                 voucher.setCount(voucher.getCount() - 1);
                 voucherRepository.save(voucher);
                 order.setVoucherId(voucher.getId());
@@ -489,13 +490,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(updateStatusOrderRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        OrderStatus orderStatus = orderStatusRepository.findById(order.getOrderStatusId()).orElseThrow(
-                () -> new RuntimeException(CodeAndMessage.ERR3)
-        );
-
-        if (orderStatus.getName().equals(OrderStatusEnum.WAIT_ACCEPT.getValue())) {
-            throw new RuntimeException("ERR10-Đơn hàng đang chờ xác nhận");
-        } else if (orderStatus.getName().equals(OrderStatusEnum.IS_LOADING.getValue())) {
             OrderStatus orderStt = orderStatusRepository.findByName(OrderStatusEnum.IS_DELIVERY.getValue());
             order.setOrderStatusId(orderStt.getId());
             order.setShipment(updateStatusOrderRequest.getShipment());
@@ -504,13 +498,6 @@ public class OrderServiceImpl implements OrderService {
             order.setModifyDate(LocalDate.now());
             orderRepository.saveAndFlush(order);
             return orderMapper.getResponseByEntity(order);
-        } else if (orderStatus.getName().equals(OrderStatusEnum.IS_DELIVERY.getValue())) {
-            throw new RuntimeException("ERR10-Đơn hàng đã được vận chuyển");
-        } else if (orderStatus.getName().equals(OrderStatusEnum.DELIVERED.getValue())) {
-            throw new RuntimeException("ERR10-Đơn hàng đã được giao thành công");
-        } else {
-            throw new RuntimeException("ERR10-Đơn hàng đã hủy");
-        }
     }
 
     @Override

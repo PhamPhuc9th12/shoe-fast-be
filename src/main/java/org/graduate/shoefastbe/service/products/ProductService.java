@@ -1,5 +1,6 @@
 package org.graduate.shoefastbe.service.products;
 
+import org.graduate.shoefastbe.common.IdAndName;
 import org.graduate.shoefastbe.dto.product.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,5 +26,6 @@ public interface ProductService {
     //admin
     ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles);
     ProductDtoResponse update( CreateProductRequest createProductRequest,List<MultipartFile> multipartFiles);
+    Page<IdAndName> getListHotProduct(Pageable pageable);
 
 }

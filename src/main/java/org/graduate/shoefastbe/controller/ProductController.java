@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.*;
+import org.graduate.shoefastbe.common.IdAndName;
 import org.graduate.shoefastbe.dto.brands.BrandResponse;
 import org.graduate.shoefastbe.dto.category.AttributeDtoRequest;
 import org.graduate.shoefastbe.dto.product.CreateProductRequest;
@@ -111,4 +112,9 @@ public class ProductController {
                                                        @ParameterObject Pageable pageable) throws IOException {
         return recommendationService.getRecommendations(productId,pageable);
     }
+//    @GetMapping("/list/hot")
+//    @Operation(summary = "Lấy sản pham bn chay nhat")
+//    public Page<IdAndName> getListHotProduct(@ParameterObject Pageable pageable){
+//        return productService.getListHotProduct(pageable);
+//    }
 }

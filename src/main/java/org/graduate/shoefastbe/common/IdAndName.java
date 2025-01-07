@@ -10,4 +10,6 @@ import lombok.*;
 public class IdAndName {
     private Long id;
     private String name;
+    private Long size;
+    private Long number;
 }

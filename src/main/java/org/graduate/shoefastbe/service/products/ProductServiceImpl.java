@@ -35,25 +35,26 @@ public class ProductServiceImpl implements ProductService {
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductAccountLikeMapRepository productAccountLikeMapRepository;
     private final CategoryRepository categoryRepository;
+
     @Override
     public Page<ProductDtoResponse> getAllProduct(Pageable pageable, String accessToken) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
-        if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
-            Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
+        if (Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)) {
+            Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE, sortedPageable);
             return getProductDtoResponses(productEntities);
-        }else{
+        } else {
             // lấy sản phẩm của người dùng đã đăng nhập -> lấy ra các sản phẩm thích
             Long userId = TokenHelper.getUserIdFromToken(accessToken);
-            Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE,sortedPageable);
+            Page<Product> productEntities = productRepository.findAllByIsActive(Boolean.TRUE, sortedPageable);
 
             Map<Long, Boolean> likeMap = productAccountLikeMapRepository.findAllByAccountId(userId)
                     .stream().collect(Collectors.toMap(ProductAccountLikeMap::getProductId, ProductAccountLikeMap::getLiked));
-            Page<ProductDtoResponse> productDtoResponses =  getProductDtoResponses(productEntities);
+            Page<ProductDtoResponse> productDtoResponses = getProductDtoResponses(productEntities);
             productDtoResponses.forEach(
                     productDtoResponse -> {
                         Boolean liked = likeMap.get(productDtoResponse.getId());
-                        productDtoResponse.setLiked(Objects.isNull(liked)? Boolean.FALSE : liked);
+                        productDtoResponse.setLiked(Objects.isNull(liked) ? Boolean.FALSE : liked);
                     }
             );
             return productDtoResponses;
@@ -62,21 +63,21 @@ public class ProductServiceImpl implements ProductService {
 
     public Page<ProductDtoResponse> getAllProductForBrand(Pageable pageable, String accessToken) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
-        if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)){
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
+        if (Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)) {
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
             return getProductDtoResponses(productEntities);
-        }else{
+        } else {
             Long userId = TokenHelper.getUserIdFromToken(accessToken);
             Page<Product> productEntities = productRepository.findAll(sortedPageable);
 
             Map<Long, Boolean> likeMap = productAccountLikeMapRepository.findAllByAccountId(userId)
                     .stream().collect(Collectors.toMap(ProductAccountLikeMap::getProductId, ProductAccountLikeMap::getLiked));
-            Page<ProductDtoResponse> productDtoResponses =  getProductDtoResponses(productEntities);
+            Page<ProductDtoResponse> productDtoResponses = getProductDtoResponses(productEntities);
             productDtoResponses.forEach(
                     productDtoResponse -> {
                         Boolean liked = likeMap.get(productDtoResponse.getId());
-                        productDtoResponse.setLiked(Objects.isNull(liked)? Boolean.FALSE : liked);
+                        productDtoResponse.setLiked(Objects.isNull(liked) ? Boolean.FALSE : liked);
                     }
             );
             return productDtoResponses;
@@ -87,33 +88,33 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Boolean likeProduct(Long productId, Boolean liked, String accessToken) {
         Long userId = TokenHelper.getUserIdFromToken(accessToken);
-        if(Objects.isNull(userId)) throw  new RuntimeException(CodeAndMessage.ERR10);
+        if (Objects.isNull(userId)) throw new RuntimeException(CodeAndMessage.ERR10);
         ProductAccountLikeMap productAccountLikeMap = productAccountLikeMapRepository.findByProductIdAndAccountId(
-                    productId, userId
+                productId, userId
         );
         Product product = productRepository.findById(productId).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        if(Objects.nonNull(productAccountLikeMap)){
-            if(Boolean.TRUE.equals(liked)){
+        if (Objects.nonNull(productAccountLikeMap)) {
+            if (Boolean.TRUE.equals(liked)) {
                 productAccountLikeMap.setLiked(liked);
                 productAccountLikeMapRepository.save(productAccountLikeMap);
-                product.setView(product.getView() +1);
+                product.setView(product.getView() + 1);
                 productRepository.save(product);
-            }else{
+            } else {
                 productAccountLikeMap.setLiked(liked);
                 productAccountLikeMapRepository.save(productAccountLikeMap);
-                product.setView(product.getView() -1);
+                product.setView(product.getView() - 1);
                 productRepository.save(product);
             }
-        }else{
+        } else {
             productAccountLikeMap = ProductAccountLikeMap.builder()
                     .accountId(userId)
                     .productId(productId)
                     .liked(liked)
                     .build();
             productAccountLikeMapRepository.save(productAccountLikeMap);
-            product.setView(product.getView() +1);
+            product.setView(product.getView() + 1);
             productRepository.save(product);
         }
         return productAccountLikeMap.getLiked();
@@ -122,14 +123,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getAllProductFilter(ProductDtoRequest productDtoRequest, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
         Page<Attribute> attributeEntities = customRepository.getAttributeFilter(productDtoRequest.getBrandIds(),
-                productDtoRequest.getCategoryIds(),productDtoRequest.getMin(),productDtoRequest.getMax(), sortedPageable);
+                productDtoRequest.getCategoryIds(), productDtoRequest.getMin(), productDtoRequest.getMax(), sortedPageable);
         Map<Long, Product> longProductEntityMap = productRepository.findAllByIdIn(attributeEntities.stream()
-                .map(Attribute::getProductId).collect(Collectors.toSet()))
+                        .map(Attribute::getProductId).collect(Collectors.toSet()))
                 .stream()
                 .collect(Collectors.toMap(
-                        Product::getId,Function.identity()
+                        Product::getId, Function.identity()
                 ));
         Map<Long, Attribute> attributeMap = attributeEntities.stream().collect(Collectors.toMap(
                 Attribute::getProductId, Function.identity()
@@ -141,10 +142,10 @@ public class ProductServiceImpl implements ProductService {
 
         List<Brands> brandsEntities = brandsRepository.findAllByIdIn(longProductEntityMap.values()
                 .stream()
-                .map(Product::getBrandId )
+                .map(Product::getBrandId)
                 .collect(Collectors.toSet()));
         Map<Long, Brands> brandsEntityMap = brandsEntities.stream().collect(Collectors.toMap(
-                Brands::getId,Function.identity()
+                Brands::getId, Function.identity()
         ));
 
         List<Sales> salesEntities = salesRepository.findAllByIdIn(longProductEntityMap.values()
@@ -152,7 +153,7 @@ public class ProductServiceImpl implements ProductService {
                 .map(Product::getSaleId)
                 .collect(Collectors.toSet()));
         Map<Long, Sales> salesEntityMap = salesEntities.stream().collect(Collectors.toMap(
-                Sales::getId,Function.identity()
+                Sales::getId, Function.identity()
         ));
 
         return attributeEntities.map(
@@ -181,8 +182,8 @@ public class ProductServiceImpl implements ProductService {
         );
         List<Attribute> attributeEntities = attributeRepository.findAllByProductId(productId);
         Double price = (double) 0;
-        for(Attribute attribute: attributeEntities){
-            if(attribute.getSize().equals(Common.SIZE_AVG)){
+        for (Attribute attribute : attributeEntities) {
+            if (attribute.getSize().equals(Common.SIZE_AVG)) {
                 price = attribute.getPrice();
             }
         }
@@ -222,36 +223,36 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductDtoResponse> getProductRelate(Long productId, Long brandId, Pageable pageable) {
-        Page<Product> productEntities = customRepository.getProductRelate(productId,brandId,pageable);
+        Page<Product> productEntities = customRepository.getProductRelate(productId, brandId, pageable);
         return getProductDtoResponses(productEntities);
     }
 
     @Override
     public Page<ProductDtoResponse> getProductBySearch(String search, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
-        Page<Product> productEntities = productRepository.getProductBySearch(search,sortedPageable);
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
+        Page<Product> productEntities = productRepository.getProductBySearch(search, sortedPageable);
         return getProductDtoResponses(productEntities);
     }
 
     @Override
     public Page<ProductDtoResponse> getAllProductWishlist(String accessToken, Pageable pageable) {
-        if(Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)) {
-           throw new RuntimeException(CodeAndMessage.ERR10);
+        if (Boolean.TRUE.equals(TokenHelper.getUserIdFromToken(accessToken).equals(0L)) || Objects.isNull(accessToken)) {
+            throw new RuntimeException(CodeAndMessage.ERR10);
         }
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
         Long userId = TokenHelper.getUserIdFromToken(accessToken);
-        List<ProductAccountLikeMap> productAccountLikeMaps = productAccountLikeMapRepository.findAllByAccountIdAndLiked(userId,Boolean.TRUE);
+        List<ProductAccountLikeMap> productAccountLikeMaps = productAccountLikeMapRepository.findAllByAccountIdAndLiked(userId, Boolean.TRUE);
         Page<Product> products = productRepository.findAllByIdIn(productAccountLikeMaps.stream()
                 .map(ProductAccountLikeMap::getProductId).collect(Collectors.toList()), sortedPageable);
         List<Product> productList = new ArrayList<>();
-        for(Product p : products){
-            if(p.getIsActive().equals(Boolean.TRUE)){
+        for (Product p : products) {
+            if (p.getIsActive().equals(Boolean.TRUE)) {
                 productList.add(p);
             }
         }
-        Page<Product> productPageFilterPage = new PageImpl<>(productList,pageable,productList.size());
+        Page<Product> productPageFilterPage = new PageImpl<>(productList, pageable, productList.size());
         return getProductDtoResponses(productPageFilterPage);
     }
 
@@ -263,11 +264,11 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDtoResponse> getProductByBrand(Long brandId, Pageable pageable) {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                Sort.by(Sort.Order.desc( "createDate"),Sort.Order.desc("id")));
-        if(brandId == 0){
-             return getAllProductForBrand(pageable, null);
-        }else{
-            Page<Product> productEntities = productRepository.findAllByBrandId(brandId,sortedPageable);
+                Sort.by(Sort.Order.desc("createDate"), Sort.Order.desc("id")));
+        if (brandId == 0) {
+            return getAllProductForBrand(pageable, null);
+        } else {
+            Page<Product> productEntities = productRepository.findAllByBrandId(brandId, sortedPageable);
             return getProductDtoResponses(productEntities);
         }
     }
@@ -277,16 +278,16 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductDtoResponse create(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles) {
         List<AttributeDtoRequest> attributes = createProductRequest.getAttribute();
-        for(AttributeDtoRequest attributeDtoRequest : attributes){
-            if(attributeDtoRequest.getStock().equals(1L)){
+        for (AttributeDtoRequest attributeDtoRequest : attributes) {
+            if (attributeDtoRequest.getStock().equals(1L)) {
                 throw new RuntimeException(CodeAndMessage.ERR13);
             }
         }
-        if(Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(),createProductRequest.getCode().trim()))){
+        if (Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(), createProductRequest.getCode().trim()))) {
             throw new RuntimeException(CodeAndMessage.ERR11);
         }
         Product product = productRepository.findByCode(createProductRequest.getCode());
-        if(Objects.nonNull(product)){
+        if (Objects.nonNull(product)) {
             throw new RuntimeException(CodeAndMessage.ERR11);
         }
         /*Create product from data*/
@@ -304,7 +305,7 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(productEntity);
 
         List<Long> categoryIds = createProductRequest.getCategoryId();
-        for(Long id: categoryIds){
+        for (Long id : categoryIds) {
             ProductCategory productCategory = ProductCategory.builder()
                     .categoryId(id)
                     .productId(productEntity.getId())
@@ -314,11 +315,11 @@ public class ProductServiceImpl implements ProductService {
         }
         /*Create image of product*/
         List<String> imageUrl = getImageUrls(multipartFiles);
-        for(int i = 0; i < imageUrl.size(); i++){
+        for (int i = 0; i < imageUrl.size(); i++) {
             Image image = new Image();
-            if(i == 0){
+            if (i == 0) {
                 image.setName("main");
-            }else{
+            } else {
                 image.setName("other");
             }
             image.setImageLink(imageUrl.get(i));
@@ -330,7 +331,7 @@ public class ProductServiceImpl implements ProductService {
         }
         /*Create attribute of product*/
         List<AttributeDtoRequest> reqAttributeDtos = createProductRequest.getAttribute();
-        for(AttributeDtoRequest r: reqAttributeDtos){
+        for (AttributeDtoRequest r : reqAttributeDtos) {
             Attribute attribute = new Attribute();
             attribute.setName(productEntity.getName());
             attribute.setSize(r.getSize());
@@ -358,30 +359,30 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ProductDtoResponse update(CreateProductRequest createProductRequest,List<MultipartFile> multipartFiles) {
+    public ProductDtoResponse update(CreateProductRequest createProductRequest, List<MultipartFile> multipartFiles) {
         List<AttributeDtoRequest> attributes = createProductRequest.getAttribute();
-        for(AttributeDtoRequest attributeDtoRequest : attributes){
-            if(attributeDtoRequest.getStock().equals(1L)){
+        for (AttributeDtoRequest attributeDtoRequest : attributes) {
+            if (attributeDtoRequest.getStock().equals(1L)) {
                 throw new RuntimeException(CodeAndMessage.ERR13);
             }
         }
         Product productEntity = productRepository.findById(createProductRequest.getId()).orElseThrow(
                 () -> new RuntimeException(CodeAndMessage.ERR3)
         );
-        if(Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(),createProductRequest.getCode().trim())) &&
-                !createProductRequest.getCode().equals(productEntity.getCode())){
+        if (Boolean.TRUE.equals(productRepository.existsByNameOrCode(createProductRequest.getName().trim(), createProductRequest.getCode().trim())) &&
+                !createProductRequest.getCode().equals(productEntity.getCode())) {
             throw new RuntimeException(CodeAndMessage.ERR11);
         }
         List<Image> images = imageRepository.findAllByProductId(productEntity.getId());
-        if(Objects.nonNull(images)){
+        if (Objects.nonNull(images)) {
             imageRepository.deleteAll(images);
         }
         List<String> imageUrl = getImageUrls(multipartFiles);
-        for(int i = 0; i < imageUrl.size(); i++){
+        for (int i = 0; i < imageUrl.size(); i++) {
             Image image = new Image();
-            if(i == 0){
+            if (i == 0) {
                 image.setName("main");
-            }else{
+            } else {
                 image.setName("other");
             }
             image.setImageLink(imageUrl.get(i));
@@ -397,7 +398,7 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(productEntity);
 
         List<Long> categoryIds = createProductRequest.getCategoryId();
-        for(Long id: categoryIds){
+        for (Long id : categoryIds) {
             ProductCategory productCategory = productCategoryRepository.findById(id).orElseThrow(
                     () -> new RuntimeException(CodeAndMessage.ERR3)
             );
@@ -407,16 +408,16 @@ public class ProductServiceImpl implements ProductService {
 
         }
         /*Create attribute of product*/
-       List<AttributeDtoRequest> reqAttributeDtos = createProductRequest.getAttribute();
-        for(AttributeDtoRequest r: reqAttributeDtos){
-            Attribute attribute = attributeRepository.findByProductIdAndSize(productEntity.getId(),r.getSize());
-            if(Objects.nonNull(attribute)){
+        List<AttributeDtoRequest> reqAttributeDtos = createProductRequest.getAttribute();
+        for (AttributeDtoRequest r : reqAttributeDtos) {
+            Attribute attribute = attributeRepository.findByProductIdAndSize(productEntity.getId(), r.getSize());
+            if (Objects.nonNull(attribute)) {
                 attribute.setName(productEntity.getName());
                 attribute.setStock(r.getStock());
                 attribute.setSize(r.getSize());
                 attribute.setPrice(r.getPrice());
                 attributeRepository.save(attribute);
-            }else{
+            } else {
                 attribute = new Attribute();
                 attribute.setName(productEntity.getName());
                 attribute.setSize(r.getSize());
@@ -432,6 +433,22 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.getResponseFromEntity(productEntity);
     }
 
+    @Override
+    public Page<IdAndName> getListHotProduct(Pageable pageable) {
+        List<Attribute> attributeList = attributeRepository.findAll().stream()
+                .sorted(Comparator.comparing(Attribute::getCache).reversed())
+                .collect(Collectors.toList());
+        Page<Attribute> productListHot = new PageImpl<>(attributeList, pageable, attributeList.size());
+        return productListHot.map(
+                attribute -> IdAndName.builder()
+                        .id(attribute.getId())
+                        .name(attribute.getName())
+                        .size(attribute.getSize())
+                        .number(attribute.getCache())
+                        .build()
+        );
+    }
+
     private Page<ProductDtoResponse> getProductDtoResponses(Page<Product> productEntities) {
         List<Attribute> attributeEntities = customRepository.getAttributeByProductId(productEntities
                 .stream().map(Product::getId).collect(Collectors.toSet()));
@@ -444,7 +461,7 @@ public class ProductServiceImpl implements ProductService {
                 .map(Product::getBrandId)
                 .collect(Collectors.toSet()));
         Map<Long, Brands> brandsEntityMap = brandsEntities.stream().collect(Collectors.toMap(
-                Brands::getId,Function.identity()
+                Brands::getId, Function.identity()
         ));
 
         List<Sales> salesEntities = salesRepository.findAllByIdIn(productEntities
@@ -452,10 +469,10 @@ public class ProductServiceImpl implements ProductService {
                 .map(Product::getSaleId)
                 .collect(Collectors.toSet()));
         Map<Long, Sales> salesEntityMap = salesEntities.stream().collect(Collectors.toMap(
-                Sales::getId,Function.identity()
+                Sales::getId, Function.identity()
         ));
         Map<Long, Image> imageMap = imageRepository.findAllByProductIdIn(productEntities
-                .stream().map(Product::getId).collect(Collectors.toList()))
+                        .stream().map(Product::getId).collect(Collectors.toList()))
                 .stream().filter(image -> image.getName().equals("main"))
                 .collect(Collectors.toMap(Image::getProductId, Function.identity()));
 
