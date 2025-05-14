@@ -29,6 +29,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 @Service
 @Transactional(readOnly = true)
 @AllArgsConstructor
@@ -38,10 +39,12 @@ public class RecommendationService {
     private final SalesRepository salesRepository;
     private final ImageRepository imageRepository;
     private final BrandsRepository brandsRepository;
+
     // Hàm kết hợp các đặc điểm của sản phẩm (view, name, description)
     private String combineFeatures(String code, String name, String description) {
         return code + " " + name + " " + description;
     }
+
     public Page<ProductDtoResponse> getRecommendations(Long productId, Pageable pageable) throws IOException {
         Product productEntity = productRepository.findById(productId).orElse(null);
         if (productEntity == null) {
@@ -60,7 +63,7 @@ public class RecommendationService {
         RealMatrix similarityMatrix = calculateCosineSimilarity(tfidfMatrix); // Cosine Similarity
         int indexProduct = -1; // get product similarity
         for (int i = 1; i <= products.size(); i++) {
-            if (products.get(i-1).getId() == productId) {
+            if (products.get(i - 1).getId() == productId) {
                 indexProduct = i;
                 break;
             }
@@ -71,10 +74,10 @@ public class RecommendationService {
         indexProduct = indexProduct - 1;
         // Lấy danh sách sản phẩm tương tự theo cosine similarity
         Map<Integer, Double> similarProducts = new HashMap<>();
-        System.out.println(indexProduct);
+        System.out.println("Index Product In Matrix: " + indexProduct);
         for (int i = 0; i < similarityMatrix.getRowDimension(); i++) {
             System.out.println("CHECK===============================");
-            System.out.println(i + "  " +similarityMatrix.getEntry(indexProduct, i));
+            System.out.println(i + "  " + similarityMatrix.getEntry(indexProduct, i));
             similarProducts.put(i, similarityMatrix.getEntry(indexProduct, i));
         }
 
@@ -97,7 +100,8 @@ public class RecommendationService {
 
         return getProductDtoResponses(productPage, productSimilarityMap);
     }
-    // Hàm tính TF-IDF matrix
+
+    // Hàm tính TF-IDF toàn bộ tài liệu
     private List<Map<String, Double>> calculateTfIdf(List<String> featuresList) throws IOException {
         // Tạo một RAMDirectory để chứa các chỉ mục của Lucene
         RAMDirectory ramDirectory = new RAMDirectory();
@@ -114,7 +118,7 @@ public class RecommendationService {
         // Tạo chỉ mục và tính toán TF-IDF
         IndexReader reader = DirectoryReader.open(ramDirectory);
         int totalDocs = reader.numDocs();
-        Map<String, Integer> documentFrequency = new HashMap<>();
+        Map<String, Integer> documentFrequency = new HashMap<>(); // so tai lieu chua tu trong toan bo tai lieu
 
         List<Map<String, Double>> tfidfMatrix = new ArrayList<>();
         for (int i = 0; i < reader.numDocs(); i++) {
@@ -126,35 +130,47 @@ public class RecommendationService {
             TokenStream tokenStream = analyzer.tokenStream("content", text);
             tokenStream.reset();
             CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+
+            // Biến để đếm tổng số từ trong tài liệu
+            int totalTermsInDocument = 0;
+
             // Tính TF và cập nhật DF
             Set<String> uniqueTermsInDocument = new HashSet<>();
             while (tokenStream.incrementToken()) {
                 String term = charTermAttribute.toString();
                 termFrequency.put(term, termFrequency.getOrDefault(term, 0) + 1);
-                if (uniqueTermsInDocument.add(term)) { // Nếu từ chưa có trong Set
-                    // lay cac cau co tu xuat hien 1 lan
+                totalTermsInDocument++; // Tăng tổng số từ
+                if (uniqueTermsInDocument.add(term)) {
                     documentFrequency.put(term, documentFrequency.getOrDefault(term, 0) + 1);
                 }
             }
             tokenStream.end();
             tokenStream.close();
-            tfidfMatrix.add(calculateTfIdfForDoc(termFrequency, documentFrequency, totalDocs));
+
+            // Chuẩn hóa TF bằng cách chia cho tổng số từ
+            Map<String, Double> normalizedTermFrequency = new HashMap<>();
+            for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
+                String term = entry.getKey();
+                int count = entry.getValue();
+                double normalizedTf = (double) count / totalTermsInDocument; // Chia cho tổng số từ
+                normalizedTermFrequency.put(term, normalizedTf);
+            }
+            tfidfMatrix.add(calculateTfIdfForDoc(normalizedTermFrequency, documentFrequency, totalDocs));
         }
 
         return tfidfMatrix;
     }
-
-    // Hàm tính TF-IDF
-    private Map<String, Double> calculateTfIdfForDoc(Map<String, Integer> termFrequency,
+    // Hàm tính TF-IDF của 1 tài liệu
+    private Map<String, Double> calculateTfIdfForDoc(Map<String, Double> normalizedTermFrequency,
                                                      Map<String, Integer> documentFrequency,
                                                      int totalDocs) {
         Map<String, Double> tfidf = new HashMap<>();
         System.out.println("TOTAL DOCS:========" + totalDocs);
-        for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
+        for (Map.Entry<String, Double> entry : normalizedTermFrequency.entrySet()) {
             String term = entry.getKey();
-            int tf = entry.getValue();
+            double tf = entry.getValue();
             int df = documentFrequency.getOrDefault(term, 0);
-            double idf = Math.log((double) totalDocs / (df + 1));  // IDF calculation
+            double idf = Math.log((double) totalDocs / (df + 1));  // IDF calculation //+ 1 de tranh loi mau = 0
 
             BigDecimal idfRounded = BigDecimal.valueOf(idf).setScale(3, RoundingMode.HALF_UP);
             tfidf.put(term, tf * idfRounded.doubleValue());
@@ -162,8 +178,6 @@ public class RecommendationService {
 
         return tfidf;
     }
-
-
 
     // Hàm tính Cosine Similarity giữa các vector TF-IDF
     private RealMatrix calculateCosineSimilarity(List<Map<String, Double>> tfidfMatrix) {
@@ -181,8 +195,8 @@ public class RecommendationService {
             tfidfVectors.add(vector);
         }
         System.out.println("====================================");
-        for(int i = 0; i< tfidfVectors.size(); i++){
-            System.out.println("vector"+i + ": " + tfidfVectors.get(i));
+        for (int i = 0; i < tfidfVectors.size(); i++) {
+            System.out.println("vector" + i + ": " + tfidfVectors.get(i));
         }
         // Chuyển ma trận TF-IDF thành RealMatrix
         double[][] tfidfArray = new double[tfidfVectors.size()][tfidfVectors.get(0).size()];
@@ -212,6 +226,7 @@ public class RecommendationService {
         System.out.println(Arrays.deepToString(similarityMatrix));
         return new Array2DRowRealMatrix(similarityMatrix);
     }
+
     // Hàm tính gia tri cosine similarity giữa hai vector
     private double cosineValueSimilarity(double[] vector1, double[] vector2) {
         double dotProduct = 0.0;
@@ -228,7 +243,7 @@ public class RecommendationService {
         return Math.round(result * 1000.0) / 1000.0;
     }
 
-    private Page<ProductDtoResponse> getProductDtoResponses(Page<Product> productEntities,Map<Long, Double> productSimilarityMap) {
+    private Page<ProductDtoResponse> getProductDtoResponses(Page<Product> productEntities, Map<Long, Double> productSimilarityMap) {
         List<Attribute> attributeEntities = customRepository.getAttributeByProductId(productEntities
                 .stream().map(Product::getId).collect(Collectors.toSet()));
 
@@ -240,7 +255,7 @@ public class RecommendationService {
                 .map(Product::getBrandId)
                 .collect(Collectors.toSet()));
         Map<Long, Brands> brandsEntityMap = brandsEntities.stream().collect(Collectors.toMap(
-                Brands::getId,Function.identity()
+                Brands::getId, Function.identity()
         ));
 
         List<Sales> salesEntities = salesRepository.findAllByIdIn(productEntities
@@ -248,7 +263,7 @@ public class RecommendationService {
                 .map(Product::getSaleId)
                 .collect(Collectors.toSet()));
         Map<Long, Sales> salesEntityMap = salesEntities.stream().collect(Collectors.toMap(
-                Sales::getId,Function.identity()
+                Sales::getId, Function.identity()
         ));
         Map<Long, Image> imageMap = imageRepository.findAllByProductIdIn(productEntities
                         .stream().map(Product::getId).collect(Collectors.toList()))

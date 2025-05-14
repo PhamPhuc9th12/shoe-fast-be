@@ -172,6 +172,7 @@ public class AccountServiceImpl implements AccountService {
         }
         account.setIsActive(accountUpdateRequest.getIsActive());
         accountRepository.save(account);
+        accountUpdateRequest.setId(accountDetail.getId());
         accountDetailMapper.updateEntityByUpdateAccount(accountDetail, accountUpdateRequest);
         accountDetailRepository.save(accountDetail);
         return accountDetail;
