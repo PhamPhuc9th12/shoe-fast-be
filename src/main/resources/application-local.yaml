@@ -37,9 +37,9 @@ spring:
       hibernate.format_sql: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/shoe_store
+    url: jdbc:postgresql://37.27.49.227/shoe?useSSL=false&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&reWriteBatchedInserts=true
     username: postgres
-    password: 09122002
+    password: azEryMn01EPBxHczti6gEnIB3cSCIZ2024
 #    url: jdbc:postgresql://dpg-ctheogggph6c73dcke7g-a.oregon-postgres.render.com/shoe_fast_v1_0
 #    username: shoe_fast_v1_0_user
 #    password: LdmpJvH3Lx46kXqczP8LIbiyMr6OTjvS
@@ -83,9 +83,9 @@ spring:
 payment:
   vnPay:
     url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-    tmnCode: 6ZQGUWLR
-    secretKey: 20HPEU8G4XNP6PG27ETDRAR2WYPRYKP3
-    returnUrl: http://localhost:8086/api/v1/payment/vn-pay-callback
+    tmnCode: K34EKZ56
+    secretKey: XHR9DTHZXOXMO0P3POBCHKF3PZU3JKWY
+    returnUrl: https://shoe-fast-be-1.onrender.com/api/v1/payment/vn-pay-callback
     version: 2.1.0
     command: pay
     orderType: other

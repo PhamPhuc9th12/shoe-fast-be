@@ -53,11 +53,11 @@ public class PaymentController {
                 order.setPayment("CHUYỂN KHOẢN QUA VNPAY");
                 order.setOrderStatusId(2L);
                 orderRepository.save(order);
-                response.sendRedirect("http://localhost:3000/order/detail/" + orderId);
-//                response.sendRedirect("https://shoe-fast-fe.onrender.com/order/detail/" + orderId);
+//                response.sendRedirect("http://localhost:3000/order/detail/" + orderId);
+                response.sendRedirect("https://shoe-fast-fe.onrender.com/order/detail/" + orderId);
             }
         } else {
-            response.sendRedirect("http://localhost:3000/");
+//            response.sendRedirect("http://localhost:3000/");
             response.sendRedirect("https://shoe-fast-fe.onrender.com/");
         }
     }
